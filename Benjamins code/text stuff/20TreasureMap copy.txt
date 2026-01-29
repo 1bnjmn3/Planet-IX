@@ -1,0 +1,78 @@
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+
+# --- CONFIGURATION ---
+# The Warp Parameters you discovered in Script 18
+WARP_INC = 16.8  # degrees
+WARP_NODE = 154.3 # degrees
+
+print(f"--- GENERATING PLANET 9 SEARCH TRACK ---")
+print(f"Targeting Orbital Plane: i={WARP_INC}, Node={WARP_NODE}")
+
+# 1. Math: Project the Orbital Plane onto the Sky
+# An orbit is a great circle on the celestial sphere.
+# We calculate the Right Ascension (RA) and Declination (Dec) for the entire 360-degree path.
+
+def get_orbit_track(inc_deg, node_deg):
+    inc = np.radians(inc_deg)
+    node = np.radians(node_deg)
+    
+    # We sweep True Anomaly (v) from 0 to 360
+    v = np.linspace(0, 2*np.pi, 500)
+    
+    # Position in Orbital Frame (z=0)
+    # x = cos(v), y = sin(v)
+    # Rotate to Ecliptic Frame
+    x_ecl = np.cos(node)*np.cos(v) - np.sin(node)*np.sin(v)*np.cos(inc)
+    y_ecl = np.sin(node)*np.cos(v) + np.cos(node)*np.sin(v)*np.cos(inc)
+    z_ecl = np.sin(v)*np.sin(inc)
+    
+    # Convert Ecliptic XYZ -> Equatorial XYZ (RA/Dec)
+    # We need the Obliquity of the Ecliptic (Earth's tilt)
+    epsilon = np.radians(23.439)
+    
+    x_eq = x_ecl
+    y_eq = y_ecl * np.cos(epsilon) - z_ecl * np.sin(epsilon)
+    z_eq = y_ecl * np.sin(epsilon) + z_ecl * np.cos(epsilon)
+    
+    # Convert XYZ -> RA/Dec
+    ra = np.degrees(np.arctan2(y_eq, x_eq)) % 360
+    dec = np.degrees(np.arcsin(z_eq))
+    
+    # Sort by RA for clean plotting
+    track = pd.DataFrame({'RA': ra, 'Dec': dec}).sort_values('RA')
+    return track
+
+# 2. Generate the "Planet 9 Track"
+p9_track = get_orbit_track(WARP_INC, WARP_NODE)
+
+# 3. Generate the "Galactic Plane" (Avoidance Zone)
+# Galactic Pole approx at RA=192.85, Dec=27.12
+# We project the Galactic Equator
+gal_track = get_orbit_track(62.87, 282.85) # Approx Inclination/Node relative to Celestial Equator
+
+# 4. PLOT THE MAP
+plt.figure(figsize=(12, 7))
+
+# Plot the Galaxy (Grey Zone - Hard to see P9 here)
+plt.scatter(gal_track['RA'], gal_track['Dec'], c='gray', s=10, alpha=0.3, label='Galactic Plane (Blind Spot)')
+
+# Plot the P9 Search Track (Red Line)
+plt.plot(p9_track['RA'], p9_track['Dec'], 'r-', linewidth=3, label=f'Predicted P9 Orbit (i={WARP_INC})')
+
+# Annotations
+plt.xlabel("Right Ascension (deg)")
+plt.ylabel("Declination (deg)")
+plt.title("The Treasure Map: Predicted Sky Path of Planet 9")
+plt.grid(True, alpha=0.3)
+plt.xlim(0, 360)
+plt.ylim(-60, 60)
+
+# Highlight "Prime Hunting Grounds"
+# Areas where the Red Line is FAR from the Grey Line
+plt.text(50, 40, "Prime Search Zone A", color='green', fontsize=12, fontweight='bold')
+plt.text(250, -40, "Prime Search Zone B", color='green', fontsize=12, fontweight='bold')
+
+plt.legend(loc='lower right')
+plt.show()
