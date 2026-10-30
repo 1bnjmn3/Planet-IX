@@ -24,3 +24,7 @@ letter flags such as `E`, assumed eccentricity).
 
 Columns: designation, name, a, e, i, Omega, omega, varpi, q, Q, M, H, epoch_jd, n_obs, n_opp, arc_days, U.
 Angles are in degrees, distances in AU, varpi = (Omega + omega) mod 360.
+
+## Outputs written by other workstreams
+- `processed/nbody_forced_poles.csv`, `processed/secular_vs_nbody.csv`, `processed/inversion/`: dynamics
+  scripts (`scripts/nbody_forced_poles.py`, `scripts/validate_secular.py`, `scripts/invert_planet.py`).
