@@ -1,0 +1,195 @@
+%% AASTeX v6.31 manuscript skeleton. Target: The Planetary Science Journal (alt: AJ).
+%% Compile on Overleaf (AAS template) or with a local TeX Live:  latexmk -pdf ms.tex
+%% Every number in this file is a macro defined in numbers.tex, which
+%% scripts/make_numbers_tex.py regenerates from paper/results/*.json.
+%% Lines starting with "%% TODO" are writing tasks, not content.
+\documentclass[twocolumn,linenumbers]{aastex631}
+
+\usepackage{amsmath}
+\input{numbers}
+
+\newcommand{\Mearth}{M_\oplus}
+\newcommand{\vpi}{\varpi}
+\newcommand{\Kbf}{\mathcal{K}}
+
+\shorttitle{A prequential test of Planet Nine}
+\shortauthors{B. Thelen}
+
+\begin{document}
+
+\title{Planet Nine's orbital evidence, tested out of sample: the Bayes factor has fallen since 2016, and when Rubin will decide}
+
+%% TODO author list, affiliations, ORCID. The submitting author stands behind every number.
+\author[0000-0000-0000-0000]{Benjamin Thelen}
+\affiliation{Independent researcher}
+
+\begin{abstract}
+%% 250 words max. Structure: question -> method -> three results -> forecast.
+Whether the clustered orbits of the most distant trans-Neptunian objects (ETNOs) require an undiscovered planet has been argued for a decade with significance tests whose answers depend on how survey bias is modelled.
+We compute the Bayes factor $\Kbf$ between a planet that confines part of the population and an isotropic population, weighting every object by its own selection function, and treat the selection model itself as an uncertain nuisance.
+For the \NbbSixteen{} known ETNOs with $a>250$\,au and $q>30$\,au we find $\Kbf=\KbbNondet$ with the planet's non-detection included, \KbbOrbits{} from the orbits alone, and at most \KselMarg{} after marginalising over selection models: ``barely worth mentioning'' to ``substantial''.
+Ordered by discovery date, the evidence peaked at $\ln\Kbf=\lnKpeak$ with the objects known by \YearPeak{} and has fallen almost monotonically since.
+This makes a prequential test possible: the planet inferred from the \NtrainObjects{} objects found by 2015 predicts the \NnewObjects{} later ones worse than isotropy ($\Kbf_\mathrm{new}=\KnewObjects$), an outcome that occurs in only \PnewUnderPlanet{} of posterior-predictive skies but is typical of skies without a planet. Every split year from 2013 to 2016 gives $p\le0.03$.
+Gigayear $N$-body integrations of three published planet configurations confirm the anti-aligned, partially confined population that the likelihood assumes (\NbodySummary).
+Finally we model the Rubin Observatory LSST selection function and forecast the decision: about \NKhundredLSST{} LSST-discovered ETNOs are needed for $\Kbf=100$ if the planet the current data imply is real, which an OSSOS-anchored population model puts at \YieldYears{} of survey operations.
+We publish the decision thresholds, the full pipeline and the predicted $\Kbf$ distributions in advance, as a pre-registered test for the LSST era.
+\end{abstract}
+
+\keywords{Trans-Neptunian objects (1705) --- Kuiper belt (893) --- Planetary dynamics (2173) --- Bayesian statistics (1900) --- Sky surveys (1464)}
+
+%% ------------------------------------------------------------------
+\section{Introduction}\label{sec:intro}
+%% TODO ~1 page. Paragraph plan:
+%% (1) The clustering claim: Trujillo & Sheppard 2014; Batygin & Brown 2016; Brown & Batygin 2016, 2019, 2021; review Batygin et al. 2019.
+%% (2) The bias counter-argument: Shankman et al. 2017 (OSSOS); Brown 2017 (bias model); Napier et al. 2021 (DES+OSSOS+ST, no evidence); Bernardinelli et al. 2020/2022.
+%% (3) The newest assessment: Siraj, Chyba & Tremaine 2026 (conditional likelihood, 2.7 -> 1.9 sigma as the sample grew 21 -> 25). State precisely how this work differs:
+%%     (a) Bayes factor against an explicit planet model rather than a significance against isotropy;
+%%     (b) the decline treated as a calibrated out-of-sample test with posterior-predictive simulations;
+%%     (c) selection-model uncertainty marginalised, not fixed;
+%%     (d) a quantitative, pre-registered LSST decision forecast. No published ETNO-specific LSST yield exists (Kurlander et al. 2025 give ~37,000 TNOs in total).
+%% (4) Alternatives that also produce clustering or warps: self-gravitating disk (Madigan & McCourt 2016; Sefilian & Touma 2019; Zderic & Madigan 2020), stellar flyby (Pfalzner 2026), "Planet Y" mean-plane warp (Siraj, Chyba & Tremaine 2025), Kuiper-belt planet (Lykawka & Ito 2023). Our H1 is the Planet Nine family only.
+%% (5) Roadmap of the paper.
+The orbits of the most distant trans-Neptunian objects are clustered in longitude of perihelion and in orbital pole \citep{Trujillo2014,Batygin2016}. \dots
+
+%% ------------------------------------------------------------------
+\section{Data}\label{sec:data}
+%% Source: MPC Distant.txt export with orbits to 2026-01-22 (6,536 orbits), arc >= 1 yr, numeric U.
+%% Table 1: the three samples (bb16 N=31; ts14 N=62; detached N=19).
+%% Table 2 (appendix A): the 31 bb16 objects with a, q, i, H, varpi, Omega, discovery year, discovering survey, per-object ln K contribution.
+%% TODO before submission: refresh to the latest MPC/JPL orbits (this environment could not reach them) and record the snapshot DOI on Zenodo.
+%% Discovery year = provisional-designation year. Caveat: announcement can lag discovery by years (e.g. 2017 OF201, announced 2025; Cheng et al. 2025). The prequential split is repeated with the BB16 training set (6 objects) as a check.
+
+\begin{deluxetable}{lccc}
+\tablecaption{ETNO samples (MPC snapshot 2026-01-22)\label{tab:samples}}
+\tablehead{\colhead{Sample} & \colhead{Definition} & \colhead{$N$} & \colhead{Use}}
+\startdata
+bb16 & $a>250$\,au, $q>30$\,au & \NbbSixteen & baseline \\
+detached & $a>250$\,au, $q>40$\,au & 19 & robustness \\
+ts14 & $a>150$\,au, $q>30$\,au & 62 & regime check \\
+\enddata
+\end{deluxetable}
+
+%% ------------------------------------------------------------------
+\section{Method}\label{sec:method}
+
+\subsection{Per-object selection functions}\label{sec:selection}
+%% Empirical footprint (Brown 2017 style): 5,396 distant discoveries mark surveyed sky to a depth; S_j(varpi, Omega) on a 72x72 grid.
+%% Characterised surveys: OSSOS v11 family (Bannister et al. 2018) pointings and efficiencies for the 9 ETNOs they found.
+%% Independent implementation (planetix.bias) as a cross-check.
+
+\subsection{Likelihood and planet model}\label{sec:likelihood}
+%% Eq. 1: p(x_j | H) = f(x_j) S_j(x_j) / \int f S_j dx.
+%% Eq. 2: mixture f = (1-F_j) + F_j vM(varpi; varpi9+180, kappa_varpi) Fisher(pole; pole9, kappa_pole).
+%% Eq. 3: F_j sigmoid in ln a around a_crit(m9, a9, e9); a_crit normalisation and secular check (planetix.dynamics).
+%% Table 3: priors.
+
+\subsection{Selection model as a nuisance parameter}\label{sec:selmarg}
+%% New. Absolute H0 likelihood ln p(D | H0, S_k) = sum_j ln[S_jk(x_j) n_cells]; posterior weight of each selection model
+%% w_k \propto p(D | H0, S_k) (equal model priors), and K_marg = sum_k w_k Z0_k K_k / sum_k w_k Z0_k.
+%% Continuous family: geometric interpolation S(alpha) \propto S_r2^(1-alpha) S_alt^alpha, alpha ~ U(0,1).
+\begin{equation}
+\Kbf_\mathrm{marg} = \frac{\int p(\alpha)\,Z_0(\alpha)\,\Kbf(\alpha)\,d\alpha}{\int p(\alpha)\,Z_0(\alpha)\,d\alpha}.
+\end{equation}
+
+\subsection{Non-detection of the planet}\label{sec:nondet}
+%% Pan-STARRS1/ZTF coverage proxy; Chen & Kipping 2017 mass-radius. Excludes 64% vs 78% published (Brown et al. 2024): conservative toward H1.
+
+\subsection{Evidence, calibration and the prequential decomposition}\label{sec:prequential}
+%% Nested sampling (dynesty; Speagle 2020). Calibration catalogues under H0, H0 with wrong selection, and H1.
+%% Prequential identity (Dawid 1984): ln K(D_1..N) = sum_n ln[p(x_n | x_<n, H1) / p(x_n | H0)], so ln K(all) - ln K(train) is the evidence carried by the new objects given what the old ones taught.
+%% Test statistic: K_new = p(x_new | x_old, H1) / p(x_new | H0), estimated with training-posterior samples;
+%% reference distributions from posterior-predictive (planet real, as the old objects imply) and from H0 skies.
+
+\subsection{$N$-body forward model}\label{sec:nbody}
+%% New. REBOUND WHFast; Sun + planet + 1000 test particles; giants as orbit-averaged J2 applied as exact secular rotations;
+%% Neptune as a q < 30 au sink; 1 Gyr; three planets (BB16, reference, BB21).
+%% Output: confined fraction, anti-alignment and pole offset vs a; compared with the mixture model's F(a), kappa_varpi, kappa_pole.
+
+%% ------------------------------------------------------------------
+\section{Results}\label{sec:results}
+
+\subsection{The Bayes factor today}\label{sec:bf}
+%% Table 4: all variants (main, nondet, detached, ts14, bias footprint, OSSOS-characterised, selection-marginalised).
+%% Figure 1 (fig1_orientations): orientations over the mean selection function.
+%% Figure 2 (fig2_bayes_factors): ln K for every variant.
+For the baseline sample $\Kbf=\KbbOrbits$ from the orbits alone and \KbbNondet{} with the non-detection term.
+
+\subsection{Evidence history}\label{sec:history}
+%% Figure 6 (fig6_history): ln K vs discovery year for bb16 and ts14, with sample size on a twin axis and the Jeffreys bands.
+%% Text: peak value, year of peak, decline since.
+The evidence peaked at $\ln\Kbf=\lnKpeak$ ($\Kbf\approx360$, ``decisive'') with the 11 objects known by \YearPeak{}, was $\KpreTwoThousandSixteen$ with the objects known by 2015, and has declined at almost every step since (Figure~6). The $a>150$\,au sample shows the same shape with a later peak (2016).
+%% TODO one paragraph: which surveys found the early objects (Sheppard-Trujillo, OSSOS) vs the later ones; regression to the mean after a hypothesis chosen on the data.
+
+\subsection{An out-of-sample test of the pre-2016 planet}\label{sec:oos}
+%% Figure 7 (fig7_predictive): distribution of ln K_new under the trained planet (posterior predictive) and under H0, observed value marked.
+%% Table 6 (appendix): per-object ln K_new contributions of the post-2015 objects (predictive_2015.json).
+\begin{deluxetable}{lcccccc}
+\tablecaption{Out-of-sample tests: the planet inferred from objects discovered up to the split year, scored on the later objects\label{tab:oos}}
+\tablehead{\colhead{Split} & \colhead{Selection} & \colhead{$N_\mathrm{train}$} & \colhead{$N_\mathrm{test}$} & \colhead{$\ln\Kbf_\mathrm{new}$} & \colhead{$p$ (trained planet)} & \colhead{$P$ (no planet, $\le$ obs)}}
+\startdata
+\PredictiveRows
+\enddata
+\tablecomments{$p$: fraction of 1,000 posterior-predictive skies with $\ln\Kbf_\mathrm{new}$ at or below the observed value. Last column: the same fraction for skies without a planet.}
+\end{deluxetable}
+Trained on the \NtrainObjects{} objects discovered by 2015, the planet hypothesis predicted the orientations of the \NnewObjects{} later objects worse than isotropy: $\ln\Kbf_\mathrm{new}=\lnKnew$. Under the planet the training set implies, $\ln\Kbf_\mathrm{new}$ is this low in \PnewUnderPlanet{} of simulated skies; under no planet it is this low or lower in \PnewUnderNull{}.
+
+\subsection{Selection-marginalised evidence}\label{sec:selres}
+%% Figure 8: ln K(alpha) and Z0(alpha); table of discrete models with weights.
+Averaging over selection models with weights set by the data gives $\Kbf=\KselMarg$ (discrete set) and \KselMargCont{} (continuous family). The data favour the footprint built only from $a>50$\,au discoveries (posterior weight 0.99 in the discrete set), which raises $\Kbf$; the conclusion that the orbits give at most substantial evidence does not depend on the selection model.
+
+\subsection{$N$-body check of the confinement model}\label{sec:nbodyres}
+%% Figure 9 (fig9_nbody): mean resultant length of varpi - varpi9 and pole offset vs a for each planet, with the model's F(a) overplotted.
+%% Key numbers: confined fraction at a >> a_crit, anti-alignment centre, kappa_varpi; whether the analytic a_crit matches.
+\NbodySummary.
+
+\subsection{Planet parameters if the planet is adopted}\label{sec:posterior}
+%% Figure 4 (fig4_posterior). Orientation constrained (varpi9, Omega9), mass and distance prior-dominated along m9 \propto a9^3.
+
+%% ------------------------------------------------------------------
+\section{Forecast: when Rubin decides}\label{sec:forecast}
+
+\subsection{An LSST selection model}\label{sec:lsstsel}
+%% WFD dec -70..+12.5, |b|>15; NES |beta|<10 to dec +40; V_lim 24.5 (24.0-25.5 range); Ivezic et al. 2019.
+%% Figure 10: S_j for three objects, current footprint vs LSST.
+
+\subsection{Information rate and decision sample size}\label{sec:info}
+%% E[ln K(N)] ~ N <D> - c ln N - c0, with <D> the per-object KL divergence (exact on the grid), c, c0 fitted to injections.
+%% Validated with end-to-end simulated LSST catalogues (lsstsim).
+%% Figure 11 (fig11_decision): N needed for K=100 over (f_max, kappa_varpi), current vs LSST selection; observed posterior overplotted.
+If the planet implied by today's data is real, $\Kbf=100$ needs about \NKhundredLSST{} ETNOs found by LSST (\NKhundredCurrent{} with today's mixture of surveys).
+
+\subsection{Yield and timeline}\label{sec:yield}
+%% OSSOS-anchored: N_LSST = N_OSSOS,obs <P_LSST>/<P_OSSOS>, Poisson (Jeffreys) interval on N_OSSOS,obs = 3, population-model variants.
+LSST should find \YieldLSST{} ETNOs with $a>250$\,au over ten years (68\% range \YieldLSSTrange{}; 114--278 across population models; 100--525 for $V_\mathrm{lim}=24.0$--$25.0$). LSST detects them near perihelion: restricting detection to $r<100$\,au, where the moving-object pipeline is efficient, removes none. If discoveries accrue evenly after a one-year orbit-arc delay, the median sky reaches $\Kbf=100$ after \YieldYearsMedian{} and 90\% of skies after \YieldYears{}.
+
+\subsection{Pre-registered decision rule}\label{sec:prereg}
+%% Fixed now, before LSST ETNO orbits exist: sample = LSST-discovered objects with a>250, q>30, arc >= 2 oppositions;
+%% pipeline = this paper's code at tag v1.0 (Zenodo DOI); selection = LSST survey simulator (Sorcha; Merritt et al. 2025) when public, else Sec. 5.1 model;
+%% decision: K >= 100 -> evidence for the planet; K <= 1/30 -> evidence against; otherwise inconclusive, re-evaluate at each data release.
+%% Predicted K distribution vs N under H0 and implied H1 tabulated in Table 6.
+
+%% ------------------------------------------------------------------
+\section{Discussion}\label{sec:discussion}
+%% 6.1 Comparison with Napier et al. 2021, Brown & Batygin 2021, Siraj et al. 2026 (agreement of direction and size).
+%% 6.2 Why the evidence fell: regression to the mean after a hypothesis chosen on the data (a winner's-curse effect); quantify with the calibration.
+%% 6.3 The ts14 signal (a > 150 au): needs a closer heavier planet; Neptune-driven? look-elsewhere p = 0.064.
+%% 6.4 Limitations: empirical selection proxy; announcement dates; orientation-only likelihood; no alternative H1; nondetection model coarse.
+
+\section{Conclusions}\label{sec:conclusions}
+%% Four numbered findings + the pre-registered test.
+
+\begin{acknowledgments}
+This work used the Minor Planet Center's database and the OSSOS survey data release.
+\end{acknowledgments}
+
+\software{numpy, scipy, pandas, dynesty \citep{Speagle2020}, REBOUND \citep{Rein2012,Rein2015}, matplotlib}
+
+\appendix
+\section{Reproducibility}\label{app:repro}
+%% Code: github.com/1bnjmn3/Planet-IX (oct26-edits/), Zenodo DOI TBD. Commands: scripts/infer_planet9.py, scripts/forecast_and_history.py, scripts/nbody_population.py, scripts/make_paper_figures.py, scripts/make_numbers_tex.py.
+\section{Per-object data}\label{app:objects}
+
+\bibliography{refs}{}
+\bibliographystyle{aasjournal}
+
+\end{document}
