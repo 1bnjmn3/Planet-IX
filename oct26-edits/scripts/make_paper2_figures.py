@@ -104,20 +104,26 @@ def fig_nbody():
     for (name, r), c in zip(nb.items(), (BLUE, ORANGE, AQUA)):
         prof = r["profile"]
         a = [np.sqrt(p["a_lo"] * p["a_hi"]) for p in prof]
-        # signed anti-alignment: R cos(<dvarpi> - 180)
-        anti = [p["R_varpi"] * np.cos(np.radians(p["mean_dvarpi"] - 180)) for p in prof]
         pl = r["planet"]
-        axes[0].plot(a, anti, "o-", color=c, ms=3.5,
+        axes[0].plot(a, [p["R_varpi"] for p in prof], "o-", color=c, ms=3.5,
                      label=f"{name}: {pl['m9']:g} $M_\\oplus$, {pl['a9']:g} au, e={pl['e9']:g}")
-        axes[1].plot(a, [p["mean_pole_offset_deg"] for p in prof], "o-", color=c, ms=3.5)
+        far = [(ai, p) for ai, p in zip(a, prof) if p["R_varpi"] > 0.2]
+        axes[1].plot([x for x, _ in far], [(p["mean_dvarpi"] + 180) % 360 - 180 for _, p in far], "o-", color=c, ms=3.5)
+    post = OUT / "posterior_bb16_nondet.npy"
+    if post.exists():
+        from scipy.special import i0e, i1e
+        th = np.median(np.load(post), axis=0)
+        k = 10 ** th[7]
+        axes[0].axhline(th[6] * i1e(k) / i0e(k), color=INK, ls="--", lw=1)
+        axes[0].text(160, th[6] * i1e(k) / i0e(k) + 0.02, "implied by the 31 ETNOs (a >> a_crit)", fontsize=6.5, color=INK)
     for ax in axes:
         ax.set_xscale("log")
         ax.set_xlabel("semi-major axis [au]")
         ax.axvline(250, color=INK2, ls=":", lw=0.8)
-    axes[0].axhline(0, color=INK, lw=0.8)
-    axes[0].set_ylabel(r"anti-alignment $R\cos(\Delta\varpi-180^\circ)$")
-    axes[1].set_ylabel("mean pole offset from planet's [deg]")
-    axes[0].legend(fontsize=6.5)
+    axes[0].set_ylabel(r"perihelion clustering $R(\varpi-\varpi_9)$")
+    axes[1].axhline(0, color=INK, lw=0.8)
+    axes[1].set_ylabel(r"cluster centre $\Delta\varpi - 180^\circ$ [deg]")
+    axes[0].legend(fontsize=6.5, loc="upper left")
     fig.savefig(FIG / "fig9_nbody.png")
     plt.close(fig)
 

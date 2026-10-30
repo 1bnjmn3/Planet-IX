@@ -41,7 +41,7 @@ Changes made (code in `scripts/forecast_and_history.py`, `scripts/nbody_populati
 | 2. Is the decline surprising? | **Calibrated out-of-sample (prequential) test.** Train the planet model on objects discovered up to year Y; compute the conditional Bayes factor K_new = p(x_new \| x_old, H1)/p(x_new \| H0) of the later objects; compare with 1,000 posterior-predictive skies (planet real, as the old objects imply) and 1,000 no-planet skies. | Y = 2015 (the year before Batygin & Brown 2016): ln K_new = −1.87, **p = 0.031** under the trained planet, typical of no-planet skies (25% are lower). Y = 2013: −4.89, p < 0.001. Y = 2014: −4.24, p = 0.001. Y = 2016: −2.37, p = 0.009. |
 | 2. Full history | **Year-by-year evidence history** for both samples. | a > 250 au: ln K rose to **5.9 (K ≈ 360) with the 11 objects known by 2013**, then fell almost monotonically to 0.86 (K = 2.4). a > 150 au: peak ln K = 9.2 in 2016, 5.0 now. |
 | 3. Propagate selection uncertainty | **Selection-marginalised Bayes factor.** Each selection model is weighted by how well it predicts the observed orientations under H0; continuous geometric interpolation between the two most different footprints. | Data strongly prefer the footprint built from a > 50 au objects. Marginalised **K = 5.6 (discrete), 4.2 (continuous)**. Still "substantial" at most on Jeffreys' scale; the conclusion does not depend on the selection choice. |
-| 4. Assumed planet model | **Gigayear N-body forward model** (REBOUND WHFast, Sun + planet + 1,000 particles, giants as exact secular J2 rotations, Neptune as a q < 30 au sink) for three published planets (BB16, reference, BB21). | Running at time of writing; fills Section 4.5 and Fig. 9. |
+| 4. Assumed planet model | **Gigayear N-body forward model** (REBOUND WHFast, Sun + planet + 1,000 particles, giants as exact secular J2 rotations, Neptune as a q < 30 au sink) for three published planets (BB16, reference, BB21). | All three planets confine the orbits. Clustering strength R rises from < 0.06 inside 250 au to 0.47–0.70 beyond 750 au, against R = 0.30 implied by the data, so the published planets cluster more strongly than observed. **But** in these 1 Gyr runs the cluster centre lies 100–165° from anti-alignment and drifts with a. That is a real caveat (see iteration 2). |
 | 5. Tie the forecast to a survey | **LSST selection model + information-rate forecast + OSSOS-anchored yield.** Exact per-object KL divergence on the grid; Occam terms calibrated on 160 injection runs; end-to-end LSST simulations as a check. | LSST sees 93% of orientation space per object vs 41% for today's survey mix, so each object is worth 26% more evidence. If the planet the data imply is real, K = 100 needs **47 LSST ETNOs for a median sky, 95 for 90% of skies** (63/133 with today's mix). OSSOS-anchored yield: **~230 ETNOs with a > 250 au in ten years** (68%: 134–409; 114–278 across population models). The decision should come **2–8 years into the survey**. |
 | 1. Novelty | All of the above, plus a **pre-registered decision rule** for LSST (sample, pipeline version, thresholds, predicted K distributions) published before LSST ETNO orbits exist. | See ms.tex §5.4. |
 
@@ -88,15 +88,17 @@ debate is published.
 |---|---|
 | 4. LSST depth and distance variants | Done: V_lim 24.0/24.5/25.0 yield 100/233/525; r < 100 au cut leaves the yield unchanged; deep-stack selection (V_lim 25.5) changes D by < 4%. |
 | Split-year robustness | Done: 2013, 2014, 2015, 2016 all give p ≤ 0.031 under the trained planet. |
-| 3. Selection weighting | Done in part: the out-of-sample test is being re-run under the data-preferred footprint (`predictive_2015_r2_amin50.json`). |
-| N-body forward model | Running; numbers fill automatically through `scripts/make_numbers_tex.py`. |
+| 3. Selection weighting | Done: under the data-preferred footprint the out-of-sample p-values are 0.002 (2013), 0.007 (2014), 0.056 (2015) and 0.003 (2016). The result does not depend on the selection model. |
+| LSST forecast check | Done: end-to-end simulated LSST catalogues give K ≥ 100 in 19%, 62% and 100% of skies at N = 31, 62 and 124, which matches the analytic forecast (median crossing near 50 objects, 90% near 95). |
+| N-body forward model | Done, with a caveat a referee will raise: the simplified model (Neptune as a q < 30 au sink, no J2 on the planet, 1 Gyr) gives a cluster centre that is not anti-aligned. The Bayes factor is invariant to a constant offset, because ϖ9 has a uniform prior, but not to an a-dependent one. **Revision item:** 4 Gyr runs with Neptune integrated explicitly (≈ 1–2 CPU-weeks), then an emulator to replace the von Mises term. |
 | 1, 2, 5, 6 | Need network access or reading that this environment could not do (MPC/JPL/arXiv blocked). These are the author's pre-submission tasks. |
 
 ## Bottom line
 
 **Yes, it is worth publishing, as a full PSJ paper rather than only a research note**, provided the
-author completes the four pre-submission tasks above (announcement-date ordering, the Siraj et al.
-2026 comparison, a data refresh with Zenodo archive, and reference checks). The headline is not the
+author completes the pre-submission tasks above: announcement-date ordering, the Siraj et al. 2026
+comparison, a data refresh with a Zenodo archive, and reference checks. The full-Neptune N-body runs
+can be done during revision. The headline is not the
 size of the Bayes factor. It is that the planet hypothesis, as the pre-2016 data defined it, failed
 a calibrated out-of-sample test (p ≈ 0.01–0.03), and that LSST will settle the question within
 roughly 2–8 years under a decision rule fixed in advance.

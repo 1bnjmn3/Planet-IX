@@ -30,7 +30,7 @@ We compute the Bayes factor $\Kbf$ between a planet that confines part of the po
 For the \NbbSixteen{} known ETNOs with $a>250$\,au and $q>30$\,au we find $\Kbf=\KbbNondet$ with the planet's non-detection included, \KbbOrbits{} from the orbits alone, and at most \KselMarg{} after marginalising over selection models: ``barely worth mentioning'' to ``substantial''.
 Ordered by discovery date, the evidence peaked at $\ln\Kbf=\lnKpeak$ with the objects known by \YearPeak{} and has fallen almost monotonically since.
 This makes a prequential test possible: the planet inferred from the \NtrainObjects{} objects found by 2015 predicts the \NnewObjects{} later ones worse than isotropy ($\Kbf_\mathrm{new}=\KnewObjects$), an outcome that occurs in only \PnewUnderPlanet{} of posterior-predictive skies but is typical of skies without a planet. Every split year from 2013 to 2016 gives $p\le0.03$.
-Gigayear $N$-body integrations of three published planet configurations confirm the anti-aligned, partially confined population that the likelihood assumes (\NbodySummary).
+Gigayear $N$-body integrations of three published planet configurations produce \NbodySummary, against \DataR{} implied by the data, so the published planets would cluster the orbits more strongly than observed.
 Finally we model the Rubin Observatory LSST selection function and forecast the decision: about \NKhundredLSST{} LSST-discovered ETNOs are needed for $\Kbf=100$ if the planet the current data imply is real, which an OSSOS-anchored population model puts at \YieldYears{} of survey operations.
 We publish the decision thresholds, the full pipeline and the predicted $\Kbf$ distributions in advance, as a pre-registered test for the LSST era.
 \end{abstract}
@@ -139,8 +139,10 @@ Averaging over selection models with weights set by the data gives $\Kbf=\KselMa
 
 \subsection{$N$-body check of the confinement model}\label{sec:nbodyres}
 %% Figure 9 (fig9_nbody): mean resultant length of varpi - varpi9 and pole offset vs a for each planet, with the model's F(a) overplotted.
-%% Key numbers: confined fraction at a >> a_crit, anti-alignment centre, kappa_varpi; whether the analytic a_crit matches.
-\NbodySummary.
+All three planets confine the population (Figure~9): \NbodySummary. The clustering switches on between 300 and 550\,au, 50--150\,au beyond the analytic $a_\mathrm{crit}$ (205, 250 and 238\,au for BB21, the reference planet and BB16), a shift the prior on $m_9$ and $a_9$ absorbs. The planet the data imply has $R=\DataR$ for $a\gg a_\mathrm{crit}$, below every simulated planet beyond 550\,au, which agrees with the injection test: the observed orbits are less clustered than the published planets predict.
+
+Two differences from the analytic model need stating. First, in our 1\,Gyr runs the cluster centre is not at $\Delta\vpi=180^\circ$ but drifts with $a$ and lies 100--160$^\circ$ from anti-alignment beyond 550\,au. A constant offset leaves $\Kbf$ unchanged, because $\vpi_9$ has a uniform prior, but an $a$-dependent offset is not in the likelihood. Second, the simulations treat Neptune only as a $q<30$\,au sink and do not precess the planet's own orbit under the giants' $J_2$. Both are known to shape the long-term anti-aligned population \citep{Batygin2016,Brown2021}.
+%% TODO (revision): 4 Gyr runs with Neptune integrated explicitly and the planet under J2; then replace the von Mises term by the simulated density (emulator over m9, a9, e9, i9).
 
 \subsection{Planet parameters if the planet is adopted}\label{sec:posterior}
 %% Figure 4 (fig4_posterior). Orientation constrained (varpi9, Omega9), mass and distance prior-dominated along m9 \propto a9^3.
@@ -156,7 +158,7 @@ Averaging over selection models with weights set by the data gives $\Kbf=\KselMa
 %% E[ln K(N)] ~ N <D> - c ln N - c0, with <D> the per-object KL divergence (exact on the grid), c, c0 fitted to injections.
 %% Validated with end-to-end simulated LSST catalogues (lsstsim).
 %% Figure 11 (fig11_decision): N needed for K=100 over (f_max, kappa_varpi), current vs LSST selection; observed posterior overplotted.
-If the planet implied by today's data is real, $\Kbf=100$ needs about \NKhundredLSST{} ETNOs found by LSST (\NKhundredCurrent{} with today's mixture of surveys).
+If the planet implied by today's data is real, $\Kbf=100$ needs about \NKhundredLSST{} ETNOs found by LSST (median sky to 90\% of skies; \NKhundredCurrent{} with today's mixture of surveys). LSST helps because each object's selection function covers 93\% of orientation space, against 41\% for today's survey mix, so each object carries 26\% more information. End-to-end simulated LSST catalogues analysed with the full pipeline confirm the forecast: $\Kbf\ge100$ in 19\%, 62\% and 100\% of skies with 31, 62 and 124 objects.
 
 \subsection{Yield and timeline}\label{sec:yield}
 %% OSSOS-anchored: N_LSST = N_OSSOS,obs <P_LSST>/<P_OSSOS>, Poisson (Jeffreys) interval on N_OSSOS,obs = 3, population-model variants.
