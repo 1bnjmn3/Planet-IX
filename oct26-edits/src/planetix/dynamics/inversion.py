@@ -225,6 +225,25 @@ def upper_limits(grid, delta=1.35):
     return lims
 
 
+def lower_limits(grid, delta=1.35):
+    """Smallest mass (Earth masses) at each a_p still within ``delta`` in lnL of the profile maximum.
+
+    Below it the planet is too weak to tilt the poles as far as the data prefer.
+    ``nan`` when the null itself is within ``delta`` of the maximum (no lower limit).
+    """
+    ll, ms = grid["loglike"], grid["masses"]
+    lims = np.full(ll.shape[0], np.nan)
+    for ia in range(ll.shape[0]):
+        row = ll[ia]
+        if np.all(np.isnan(row)):
+            continue
+        best = np.nanmax(row)
+        if best - grid["null_loglike"][ia] < delta:
+            continue
+        lims[ia] = float(ms[np.where(best - row < delta)[0][0]])
+    return lims
+
+
 # ---------------------------------------------------------------- calibration
 
 def sample_vmf(mu, kappa, n, rng):

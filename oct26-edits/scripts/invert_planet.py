@@ -5,7 +5,7 @@
 Writes, under --out:
   mean_poles.csv        mean orbit pole per a-bin with bootstrap and null p-values
   profile_<cut>.csv     profile likelihood over (mass, a_p) for free and fixed i_p
-  upper_limits.csv      95% one-sided mass upper limits per (cut, a_p, i_p)
+  upper_limits.csv      95% one-sided mass limits per (cut, a_p, i_p)
   calibration.json      test statistics on the data and on no-planet mocks
   script25.json         the original script 25 fit, on data and isotropic mocks
 """
@@ -21,7 +21,7 @@ from planetix.data import load_catalog, load_etnos
 from planetix.dynamics.frames import invariable_to_ecliptic, pole_to_angles
 from planetix.dynamics.inversion import (
     Sample, circular_fit_demo, fit_common_plane, fit_null, mock_null, profile_grid, sample_vmf,
-    test_statistic, upper_limits,
+    lower_limits, test_statistic, upper_limits,
 )
 
 MASSES = np.geomspace(0.05, 50.0, 19)
@@ -72,20 +72,20 @@ def main():
         rows = []
         for i_fix in I_FIXED:
             g = profile_grid(s, MASSES, A_PLANETS, i_fixed=i_fix)
-            ul = upper_limits(g)
+            ul, ll = upper_limits(g), lower_limits(g)
             for ia, a_p in enumerate(A_PLANETS):
                 limits.append(dict(cut=cut, a_p=a_p, i_p=i_fix if i_fix is not None else "free", n=int(g["n"][ia]),
-                                   mass_upper_95=ul[ia],
+                                   mass_upper_95=ul[ia], mass_lower_95=ll[ia],
                                    best_2dlnL=2 * (np.nanmax(g["loglike"][ia]) - g["null_loglike"][ia])
                                    if g["n"][ia] >= 5 else np.nan))
                 for im, m in enumerate(MASSES):
                     rows.append(dict(i_fixed=i_fix, a_p=a_p, mass=m, n=int(g["n"][ia]),
                                      dlnL=g["loglike"][ia, im] - g["null_loglike"][ia],
                                      i_p=g["i_p"][ia, im], Omega_p=g["Omega_p"][ia, im], kappa=g["kappa"][ia, im]))
-            if i_fix is None:
-                ts_planet = test_statistic(g)
         pd.DataFrame(rows).to_csv(out / f"profile_{cut}.csv", index=False)
 
+        # data and mocks use the same (coarser) mass grid so their test statistics are comparable
+        ts_planet = test_statistic(profile_grid(s, MASSES[::3], A_PLANETS))
         kappa = fit_null(s)["kappa"]
         mocks_planet, mocks_plane = [], []
         for _ in range(args.mocks):
