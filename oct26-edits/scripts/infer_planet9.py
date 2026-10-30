@@ -9,6 +9,7 @@ Writes JSON results and posterior samples to paper/results/. Stages:
     loo         leave-one-out influence of each object (bb16)
     nondet      as main, also requiring that direct searches missed the planet
     calib       simulated no-planet and planet catalogues (false-positive rate and power)
+    external    selection functions from planetix.bias (footprint and OSSOS-characterised)
     calib2      no-planet catalogues for ts14, and with a mis-specified selection function
 
 Usage:
@@ -252,9 +253,52 @@ def stage_calib2(n=100):
     _save("calibration2", {"runs": out})
 
 
+def _bias_cube(df, model, n_clones, seed=0):
+    from planetix.bias import selection_grid as bias_grid
+
+    rng = np.random.default_rng(seed)
+    return np.stack([bias_grid(o, model, bins=(72, 72), n_clones=n_clones, rng=rng) for _, o in df.iterrows()])
+
+
+def stage_external():
+    """Selection functions from the survey-bias workstream (planetix.bias): its own
+    empirical footprint for the full samples, and the OSSOS-family characterised
+    surveys for the ETNOs those surveys found."""
+    from planetix.bias import EmpiricalFootprint, SurveySet, discovery_table
+
+    disc = discovery_table()
+    out = {}
+    fp = EmpiricalFootprint.from_catalog(exclude=load_etnos("ts14")["designation"], discoveries=disc)
+    for cut in ("bb16", "ts14"):
+        df = load_etnos(cut)
+        S = _bias_cube(df, fp, 200_000)
+        np.save(CACHE / f"S_{cut}_biasfp.npy", S)
+        res = run_evidence(Likelihood.from_frame(df, S), nlive=NLIVE)
+        out[f"{cut}_bias_footprint"] = summarise(res)
+        print(f"  {cut} planetix.bias footprint: lnBF={res.log_bf:.2f}")
+
+    ss = SurveySet.load()
+    det = ss.detections()
+    sub = det[(det["a"] > CUTS["ts14"]["a_min"]) & (det["q"] > CUTS["ts14"]["q_min"])].copy()
+    # survey-band H to V, as in scripts/run_bias.py (V - r = +0.28)
+    filt_minus_v = {"OSSOS_v11": -0.28, "CFEPS_r": -0.28, "HiLat": -0.28, "MA": -0.28, "CFEPS_g": 0.42,
+                    "CFEPS_presurvey": -0.38}
+    sub["H"] = sub["Hsur"] - sub["survey"].map(filt_minus_v)
+    sub["varpi"] = (sub["Omega"] + sub["omega"]) % 360.0
+    sub = sub.reset_index(drop=True)
+    excl = set(disc.loc[disc["packed"].isin(sub["MPC"]), "designation"])
+    fp_sub = EmpiricalFootprint.from_catalog(exclude=excl, discoveries=disc)
+    for name, model, n in (("ossos_characterised", ss, 1_000_000), ("ossos_objects_footprint", fp_sub, 200_000)):
+        S = _bias_cube(sub, model, n)
+        res = run_evidence(Likelihood.from_frame(sub, S), nlive=NLIVE)
+        out[name] = summarise(res, objects=sub["object"].tolist(), a=sub["a"].round(1).tolist())
+        print(f"  OSSOS-family ETNOs (N={len(sub)}), {name}: lnBF={res.log_bf:.2f}")
+    _save("external_selection", out)
+
+
 STAGES = {"main": stage_main, "priors": stage_priors, "selection": stage_selection,
           "split": stage_split, "loo": stage_loo, "nondet": stage_nondet, "calib": stage_calib,
-          "calib2": stage_calib2}
+          "calib2": stage_calib2, "external": stage_external}
 
 
 def main():

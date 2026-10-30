@@ -64,7 +64,8 @@ def fig_orientations():
 
 
 def fig_bayes_factors():
-    main, nondet, pri, sel, split = (load(n) for n in ("main", "nondet", "priors", "selection", "split"))
+    main, nondet, pri, sel, split, ext = (load(n) for n in ("main", "nondet", "priors", "selection", "split",
+                                                            "external_selection"))
     rows = [
         ("Sample definition", [
             ("bb16  a>250, q>30  (N=31)  baseline", main["bb16"]),
@@ -79,6 +80,13 @@ def fig_bayes_factors():
             ("footprint radius 1 deg", sel["radius_1deg"]),
             ("footprint radius 4 deg", sel["radius_4deg"]),
             ("footprint from a > 50 AU only", sel["bb16_footprint_a_gt_50"]),
+            ("planetix.bias footprint", ext["bb16_bias_footprint"]),
+            ("ts14, footprint from a > 50 AU", sel["ts14_footprint_a_gt_50"]),
+            ("ts14, planetix.bias footprint", ext["ts14_bias_footprint"]),
+        ]),
+        ("OSSOS-family ETNOs (N=9, a>150)", [
+            ("characterised survey simulator", ext["ossos_characterised"]),
+            ("empirical footprint", ext["ossos_objects_footprint"]),
         ]),
         ("Priors (bb16)", [(k.replace("_", " "), v) for k, v in pri.items() if k != "baseline"]),
         ("Discovery epoch (bb16)", [
