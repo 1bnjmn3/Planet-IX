@@ -9,25 +9,37 @@ reproduced by `python scripts/infer_planet9.py && python scripts/make_paper_figu
 
 ## Abstract
 
-We compute the Bayes factor between two hypotheses for the orientations of the most distant
-trans-Neptunian orbits: H1, an undiscovered planet confines part of the population (anti-aligned
-perihelia and orbital poles tilted toward the planet's), and H0, orientations are isotropic and any
-apparent clustering is survey selection plus chance. The likelihood weights every object by its own
-survey selection function, built from the sky positions and magnitudes at discovery of 5,396 distant
-objects in the January 2026 Minor Planet Center catalogue. For the standard sample of 31 objects with
-a > 250 AU and q > 30 AU, the Bayes factor is **K = 2.5 (ln K = 0.90 ± 0.10)**, and **K = 1.7** once we
-also require that wide-field searches have missed the planet itself. With even prior odds, that is
-a **63% posterior probability that the planet exists** (71% from the orbits alone). On Jeffreys'
-scale this is "barely worth mentioning". Across 11 prior choices, 6 selection-function variants and
-two other sample definitions the Bayes factor stays between {RANGE_BB16} for the a > 250 AU samples.
-Only the looser a > 150 AU sample gives strong evidence (K = 160, or 50 with the non-detection term),
-and it does so only by requiring the planet to confine objects at 150 to 250 AU, which standard
-Planet Nine dynamics does not predict. Simulated catalogues show why the answer is weak: with 31
-objects even a true planet of the published kind yields a median K of only {CAL_PLANET31}, and
-reaching K = 100 typically needs about {CAL_N100} objects. Objects found since 2016 lowered the
-Bayes factor by a factor of 7 (from 17 to 2.5). The data do not settle the question. The honest
-result is a probability near even odds, with the uncertainty dominated by how well survey selection
-is known.
+We compute the Bayes factor K between two hypotheses for the orientations of the most distant
+trans-Neptunian orbits. Under H1, an undiscovered planet confines part of the population: perihelia
+are anti-aligned with the planet's, and orbital poles are tilted toward its pole. Under H0,
+orientations are isotropic and any apparent clustering is survey selection plus chance. Every object
+is weighted by its own survey selection function, built from the discovery positions and magnitudes
+of 5,396 distant objects in the January 2026 Minor Planet Center catalogue.
+
+For the standard sample of 31 objects with a > 250 AU and q > 30 AU, **K = 2.5 (ln K = 0.90 ± 0.10)**.
+Requiring that wide-field searches missed the planet itself lowers this to **K = 1.7**. At even prior
+odds, that is a **63% probability that the planet exists** (71% from the orbits alone), which is
+"barely worth mentioning" on Jeffreys' scale. Across 10 alternative priors, 6 selection models and
+the stricter q > 40 AU sample, K stays between 0.5 and 6 for objects with a > 250 AU. The 9 ETNOs from
+fully characterised surveys give K = 0.7.
+
+Simulations show why the answer is weak. The data are not too few to see a strong planet: a planet
+like the published Brown & Batygin (2021) solution gives a median K of 350 with 31 objects, and 90% of
+such catalogues beat the observed value. The real orbits sit between the two hypotheses. They are
+more clustered than 98% of no-planet skies, but weakly enough that the planet they would imply
+(confining ~40% of the population, with a loose ±40° spread) yields a median K of only 3 at N = 31.
+Telling that planet from no planet at K = 100 needs about 120 ETNOs with a > 250 AU, four times
+today's sample. Objects found since 2016 lowered K by a factor of 7 (from 17 to 2.5).
+
+Only the looser a > 150 AU sample (N = 62) gives strong evidence (K = 160, or 50 with the non-detection
+term). It does so only by invoking a closer, heavier planet (about 11 M⊕ at 310 AU, V ≈ 19–20)
+that confines objects at 150–250 AU, where standard Planet Nine dynamics does not predict
+confinement. The bias analysis flags that signal as possibly Neptune-driven, and the statistics
+analysis finds its significance drops to p = 0.064 once the choice among 15 sample cuts is accounted for.
+
+The orbits favour a planet weakly, and the probability is near 60–70% at even odds. Measurement
+noise is not what limits this. The limits are the number of objects and how well survey selection is
+known: no-planet skies analysed with the wrong selection model reach K ≥ 3 in 5% of cases.
 
 ---
 
@@ -142,7 +154,9 @@ is the sampler's error on ln K.
 We simulate catalogues with the real objects' (a, e, i, H), drawing orientations through each
 object's S_j, either isotropically (H0) or from the planet model at the Brown & Batygin (2021) best
 fit (6.2 M⊕, 380 AU, e = 0.2, i = 16°, ϖ9 = 247°, Ω9 = 96°, f_max = 0.6, κ_ϖ = 4, κ_pole = 20). Each
-simulated catalogue is analysed exactly as the real one. We also draw no-planet catalogues through
+simulated catalogue is analysed exactly as the real one. We repeat the planet injections at the bb16
+posterior median (the planet the data would imply) for samples of 31 to 248 objects, resampling the
+real objects' (a, e, i, H). We also draw no-planet catalogues through
 one selection function and analyse them with another, to measure what a wrong selection model does.
 
 ## 4. Results
@@ -167,7 +181,7 @@ one selection function and analyse them with another, to measure what a wrong se
 *Figure 2. ln K for every variant. Vertical lines mark K = 3, 10, 30 and 100. Bars are the
 nested-sampling error.*
 
-**Prior sensitivity.** Over 11 prior variants on bb16 (wider or narrower mass and distance ranges, a
+**Prior sensitivity.** Over 10 alternative prior choices on bb16 (wider or narrower mass and distance ranges, a
 prior centred on the Brown & Batygin 2021 solution, wider and tighter κ ranges, f_max below or above
 0.5, low and wide inclination ranges, and transition widths w = 0.1 and 0.4) ln K ranges from 0.43 to
 1.31 (K = 1.5 to 3.7). The largest swing comes from f_max: requiring that a planet confine more than
@@ -176,19 +190,61 @@ strongly clustered.
 
 **Selection sensitivity.** Ignoring selection altogether gives ln K = 0.22. Footprint radii of 1° and
 4° give 0.74 and 0.86. Building the footprint only from scattered and detached objects (a > 50 AU),
-whose sky distribution is not shaped by the resonant and classical belts, raises ln K to 1.81 for
-bb16 and 5.84 for ts14. The independent footprint implementation of the bias workstream gives 0.61 (bb16) and 4.62 (ts14). For the 9 ETNOs (a > 150 AU) found by the OSSOS-family surveys, the fully characterised survey simulation gives ln K = −0.39 and the empirical footprint gives −0.46: the two selection models differ object by object, but agree on the Bayes factor. The choice of selection model moves ln K by about ±1, as much
+whose sky distribution is not shaped by the resonant and classical belts, raises ln K to 1.78 for
+bb16 and 5.74 for ts14. The independent footprint implementation of the bias workstream gives 0.61 (bb16) and 4.62 (ts14). For the 9 ETNOs (a > 150 AU) found by the OSSOS-family surveys, the fully characterised survey simulation gives ln K = −0.39 and the empirical footprint gives −0.46: the two selection models differ object by object, but agree on the Bayes factor. The choice of selection model moves ln K by about ±1, as much
 as all the prior choices together. It is the limiting systematic.
+
+**Agreement with the frequentist tests.** The statistics and bias workstreams tested the same samples
+for clustering without a planet model. For bb16 they find ϖ clustering with p = 0.19 (0.22 bias
+corrected) and a uniform node distribution. For ts14 they find node p = 0.001 and ϖ p = 0.012, or
+0.007 bias corrected; the ϖ result rises to 0.064 after correcting for the 15 sample cuts tried. The 9
+ETNOs from characterised surveys all give p > 0.2. Our Bayes factors rank the samples the same way.
+The bb16 Bayes factor is more favourable to clustering than its p-value because the planet model
+uses ϖ and Ω jointly and ties them to one planet, which the single-angle tests do not.
 
 ### 4.2 Is the answer limited by the data or by the method?
 
 ![Calibration with simulated catalogues](figures/fig3_calibration.png)
 
-*Figure 3. Left: ln K for simulated bb16-like catalogues with no planet (grey) and with the
-reference planet (blue); the orange line is the real catalogue. Right: median and 16–84% range of
-ln K as the number of a > 250 AU objects grows.*
+*Figure 3. Left: ln K for simulated bb16-like catalogues with no planet (grey), with no planet but
+analysed with the wrong selection model (outline), and with the reference planet (blue); the orange
+line is the real catalogue. Right: median and 16–84% range of ln K as the number of a > 250 AU
+objects grows, for no planet, the reference planet, and the planet the bb16 data imply (aqua). The
+dashed orange line is the observed value.*
 
-{CALIBRATION_TEXT}
+**Is the method calibrated?** For 200 no-planet catalogues analysed with the same selection model
+that generated them, the median ln K is −1.15 (K = 0.3). This is how a nested model comparison
+should behave: when there is no planet, the evidence moves toward "no planet". Only 2.0% of those
+skies reach the observed ln K = 0.90, and none reaches K = 10. In frequentist terms the observed
+clustering has p ≈ 0.02 under our selection model.
+
+**What if the selection model is wrong?** We drew 100 no-planet catalogues through the alternative
+footprint (built only from a > 50 AU objects, 4° radius) and analysed them with the baseline one.
+Then 9% reach the observed ln K, 5% reach K = 3, 3% reach K = 10, and one in a hundred reaches
+ln K = 7.5. A selection error of the size that separates our two plausible footprints is enough to
+make a no-planet sky look like the observed one about one time in ten. The same test for ts14 never
+reached the observed ln K = 5.09 in 100 tries (maximum 3.7), so the ts14 signal is not this kind of
+artefact.
+
+**Would we have seen a real planet?** A strongly confining planet, the Brown & Batygin (2021) best fit
+with 60% of a ≫ a_crit objects confined (κ_ϖ = 4, κ_pole = 20), gives a median ln K of 5.9 (K ≈ 350)
+with 31 objects. 60% of those catalogues reach K = 100, and only 10% fall below the observed value.
+The data therefore disfavour a strongly confining planet. The planet the data would imply if one
+exists (the bb16 posterior median: f_max = 0.39, κ_ϖ = 2.7, i.e. a ±40° perihelion spread) gives a
+median ln K of 1.1 at N = 31, essentially the observed value. Half of such skies give K < 2.5. The
+evidence then grows quickly with sample size:
+
+| ETNOs (a > 250 AU) | median ln K, implied planet | P(K ≥ 10) | P(K ≥ 100) | median ln K, no planet |
+|---|---|---|---|---|
+| 31 (today) | 1.1 | 35% | 7% | −1.2 |
+| 62 | 4.3 | 70% | 42% | −1.4 |
+| 124 | 13.4 | 93% | 88% | −1.9 |
+| 248 | 31.2 | 100% | 100% | −2.3 |
+
+So the weak result is what the data can deliver today, not a failure of the method. A sample of
+about 120 ETNOs with a > 250 AU, discovered with known selection, should settle the question either
+way. That is the kind of sample the Rubin Observatory's LSST is expected to deliver within its first
+years.
 
 ### 4.3 Which objects carry the signal
 
@@ -264,12 +320,38 @@ depends on a dynamical regime the planet model was not built for, not as the hea
 
 ## 6. Conclusion
 
-On the data available in January 2026, the distant orbits favour a ninth planet by a Bayes factor of
-about 2 (1.7 including the planet's non-detection; 0.5 to 6 across defensible choices for a > 250 AU
-samples). At even prior odds the probability that the planet exists is about 60–70%. That is not
-evidence in either direction worth acting on, and it is smaller than the 17 the same method gives on
-the objects known before 2016. The planet's direction, if it exists, is constrained (ϖ9 ≈ 217°,
-Ω9 ≈ 98°), but its mass, distance and inclination are not. {CONCLUSION_CAL}
+**Result.** On the orbits known in January 2026, the population where Planet Nine predicts
+confinement (a > 250 AU, q > 30 AU, 31 objects) favours a planet over no planet by a Bayes factor
+**K ≈ 1.7** once the planet's non-detection in wide-field surveys is included (2.5 from the orbits
+alone). Defensible alternative choices of prior, selection model and perihelion cut give K = 0.5 to 6.
+The posterior probability that the planet exists is K·O / (1 + K·O) for prior odds O:
+
+| prior odds O (planet : no planet) | P(planet), K = 1.7 | P(planet), K = 0.5 | P(planet), K = 6 |
+|---|---|---|---|
+| 1 : 1 | **0.63** | 0.33 | 0.86 |
+| 1 : 4 | 0.30 | 0.11 | 0.60 |
+| 4 : 1 | 0.87 | 0.67 | 0.96 |
+
+That is not evidence worth acting on in either direction. It is also weaker than the K ≈ 17 the same
+method gives on the objects known before 2016: discoveries made after the hypothesis have diluted it.
+
+**Why it is weak, quantified.** The observed clustering is more than 98% of isotropic skies produce,
+but only 91% once the selection model is allowed to be wrong by the amount our two footprints differ.
+It is less than 90% of skies with a strongly confining planet produce, so a planet of that kind is
+disfavoured. It is what a planet confining about 40% of the distant population, with a ±40°
+perihelion spread, would typically produce with 31 objects. If that planet exists, doubling the
+sample gives K ≥ 10 70% of the time and quadrupling it gives K ≥ 100 88% of the time.
+
+**What is and is not measured.** If the planet exists, its direction is constrained (ϖ9 = 217
+(+29/−20)°, Ω9 = 98 (+26/−21)°, consistent with Brown & Batygin 2021). Its mass, distance and
+inclination are not: their posteriors follow the priors along the degeneracy m9 ∝ a9³.
+
+**The one strong signal.** The a > 150 AU sample gives K = 50–160, but only for a closer, heavier
+planet (~11 M⊕ at ~310 AU, V ≈ 19–20) that confines objects at 150–250 AU. Standard Planet Nine
+dynamics does not predict confinement there, and such a planet should mostly have been seen already.
+The other workstreams find that signal falls to p = 0.064 after the look-elsewhere correction and may
+be Neptune-driven. It deserves a dedicated dynamical model; it is not evidence for Planet Nine as
+proposed.
 
 ## References
 
@@ -289,7 +371,7 @@ the objects known before 2016. The planet's direction, if it exists, is constrai
 
 ```bash
 cd oct26-edits
-pip install -e ".[plot,dev]" dynesty
+pip install -e ".[plot,inference,dev]"
 python scripts/infer_planet9.py          # ~1 h on 4 cores; writes paper/results/
 python scripts/make_paper_figures.py     # writes paper/figures/
 pytest

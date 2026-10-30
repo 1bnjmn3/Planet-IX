@@ -63,6 +63,15 @@ def fig_orientations():
     plt.close(fig)
 
 
+PRIOR_NAMES = {
+    "wide_mass_a": "m 0.5-30 M_E, a 200-1500 AU", "narrow_bb21": "m 4-10, a 300-600, i < 30 (BB21-like)",
+    "wide_kappa": "wider concentration ranges", "tight_kappa": "tighter concentration ranges",
+    "fmax_le_0.5": "confined fraction f_max < 0.5", "fmax_ge_0.5": "confined fraction f_max > 0.5",
+    "low_incl": "i9 < 25 deg", "wide_incl": "i9 < 90 deg", "width_w0.1": "transition width w = 0.1",
+    "width_w0.4": "transition width w = 0.4",
+}
+
+
 def fig_bayes_factors():
     main, nondet, pri, sel, split, ext = (load(n) for n in ("main", "nondet", "priors", "selection", "split",
                                                             "external_selection"))
@@ -88,7 +97,7 @@ def fig_bayes_factors():
             ("characterised survey simulator", ext["ossos_characterised"]),
             ("empirical footprint", ext["ossos_objects_footprint"]),
         ]),
-        ("Priors (bb16)", [(k.replace("_", " "), v) for k, v in pri.items() if k != "baseline"]),
+        ("Priors (bb16)", [(PRIOR_NAMES.get(k, k), v) for k, v in pri.items() if k != "baseline"]),
         ("Discovery epoch (bb16)", [
             (f"discovered before 2016 (N={split['before_2016']['n_obj']})", split["before_2016"]),
         ]),
@@ -105,7 +114,7 @@ def fig_bayes_factors():
     for x in (0, np.log(3), np.log(10), np.log(30), np.log(100)):
         ax.axvline(x, color=GRID if x else INK2, lw=0.8, zorder=0)
     for x, name in ((np.log(3), "3"), (np.log(10), "10"), (np.log(30), "30"), (np.log(100), "100")):
-        ax.text(x, y.max() + 1.3, f"BF {name}", ha="center", fontsize=7, color=INK2)
+        ax.text(x, y.max() + 1.3, f"K = {name}", ha="center", fontsize=7, color=INK2)
     colors = [BLUE if v >= 0 else ORANGE for v in vals]
     ax.errorbar(vals, y, xerr=errs, fmt="none", ecolor=INK2, lw=1, zorder=2)
     ax.scatter(vals, y, c=colors, s=26, zorder=3, edgecolors="white", lw=0.8)
@@ -114,7 +123,7 @@ def fig_bayes_factors():
     for g, k in groups:
         ax.text(-0.02, y[k] + 0.9, g, transform=ax.get_yaxis_transform(), ha="right", fontsize=8, weight="bold",
                 color=INK)
-    ax.set_xlabel(r"$\ln$ Bayes factor, planet vs no planet  (positive favours a planet)")
+    ax.set_xlabel(r"$\ln K$, Bayes factor planet vs no planet  (positive favours a planet)")
     ax.grid(axis="y", visible=False)
     ax.set_ylim(y.min() - 0.8, y.max() + 2.0)
     fig.savefig(FIG / "fig2_bayes_factors.png")
@@ -122,39 +131,48 @@ def fig_bayes_factors():
 
 
 def fig_calibration():
-    cal = load("calibration")
-    runs = cal["runs"]
+    runs = load("calibration")["runs"]
+    cross = [r for r in load("calibration2")["runs"] if r["cut"] == "bb16" and r["cross"]]
+    power = load("power")["runs"] if (OUT / "power.json").exists() else []
     main = load("main")
-    fig, axes = plt.subplots(1, 2, figsize=(7.2, 2.8))
-    null31 = np.array([r["ln_bf"] for r in runs if r["kind"] == "null" and r["n_obj"] == 31])
-    bins = np.linspace(-3, 8, 45)
+    fig, axes = plt.subplots(1, 2, figsize=(7.4, 3.0))
+
+    def pick(rs, kind, n):
+        return np.array([r["ln_bf"] for r in rs if r["kind"] == kind and r["n_obj"] == n])
+
+    bins = np.linspace(-3, 21, 73)
     ax = axes[0]
-    ax.hist(null31, bins=bins, color=INK2, alpha=0.55, label=f"no planet, N=31 ({len(null31)} sims)")
-    p31 = np.array([r["ln_bf"] for r in runs if r["kind"] == "planet" and r["n_obj"] == 31])
-    ax.hist(p31, bins=bins, color=BLUE, alpha=0.55, label=f"planet injected, N=31 ({len(p31)} sims)")
+    null31 = pick(runs, "null", 31)
+    ax.hist(null31, bins=bins, color=INK2, alpha=0.55, label=f"no planet ({len(null31)})")
+    ax.hist([r["ln_bf"] for r in cross], bins=bins, histtype="step", color=INK, lw=1.2,
+            label=f"no planet, wrong selection model ({len(cross)})")
+    ref31 = pick(runs, "planet", 31)
+    ax.hist(ref31, bins=bins, color=BLUE, alpha=0.5, label=f"reference planet ({len(ref31)})")
     ax.axvline(main["bb16"]["ln_bf"], color=ORANGE, lw=2, label="observed bb16")
-    ax.set_xlabel(r"$\ln$ BF")
-    ax.set_ylabel("simulated catalogues")
-    ax.legend(fontsize=7)
+    ax.set_xlabel(r"$\ln K$")
+    ax.set_ylabel("simulated catalogues, N = 31")
+    ax.legend(fontsize=6.5)
+
     ax = axes[1]
-    sizes = sorted({r["n_obj"] for r in runs})
-    for kind, c in (("null", INK2), ("planet", BLUE)):
-        med, lo, hi = [], [], []
-        for n in sizes:
-            v = np.array([r["ln_bf"] for r in runs if r["kind"] == kind and r["n_obj"] == n])
-            med.append(np.median(v))
-            lo.append(np.percentile(v, 16))
-            hi.append(np.percentile(v, 84))
-        ax.fill_between(sizes, lo, hi, color=c, alpha=0.2, lw=0)
-        ax.plot(sizes, med, "o-", color=c, lw=2, ms=5, label="no planet" if kind == "null" else "planet injected")
-    ax.axhline(np.log(100), color=GRID, lw=1)
-    ax.text(sizes[0], np.log(100) + 0.2, "BF 100", fontsize=7, color=INK2)
+    series = [("no planet", runs + power, "null", INK2), ("reference planet", runs, "planet", BLUE)]
+    if power:
+        series.append(("planet the bb16 data imply", power, "planet", AQUA))
+    for label, rs, kind, c in series:
+        sizes = sorted({r["n_obj"] for r in rs if r["kind"] == kind})
+        stats = np.array([np.percentile(pick(rs, kind, n), [16, 50, 84]) for n in sizes])
+        ax.fill_between(sizes, stats[:, 0], stats[:, 2], color=c, alpha=0.18, lw=0)
+        ax.plot(sizes, stats[:, 1], "o-", color=c, lw=2, ms=5, label=label)
+    ax.axhline(main["bb16"]["ln_bf"], color=ORANGE, lw=1, ls="--")
+    for k, name in ((np.log(10), "K = 10"), (np.log(100), "K = 100")):
+        ax.axhline(k, color=GRID, lw=1)
+        ax.text(250, k + 0.3, name, fontsize=7, color=INK2, ha="right")
     ax.set_xscale("log")
-    ax.set_xticks(sizes)
-    ax.set_xticklabels(sizes)
+    ticks = [31, 62, 124, 248]
+    ax.set_xticks(ticks)
+    ax.set_xticklabels(ticks)
     ax.minorticks_off()
-    ax.set_xlabel("number of ETNOs (a > 250 AU)")
-    ax.set_ylabel(r"$\ln$ BF  (median, 16-84%)")
+    ax.set_xlabel("number of ETNOs with a > 250 AU")
+    ax.set_ylabel(r"$\ln K$  (median, 16-84%)")
     ax.legend(fontsize=7, loc="upper left")
     fig.tight_layout()
     fig.savefig(FIG / "fig3_calibration.png")

@@ -9,6 +9,7 @@ Writes JSON results and posterior samples to paper/results/. Stages:
     loo         leave-one-out influence of each object (bb16)
     nondet      as main, also requiring that direct searches missed the planet
     calib       simulated no-planet and planet catalogues (false-positive rate and power)
+    power       injections of the planet the bb16 posterior implies, for growing N
     external    selection functions from planetix.bias (footprint and OSSOS-characterised)
     calib2      no-planet catalogues for ts14, and with a mis-specified selection function
 
@@ -203,7 +204,8 @@ def stage_loo():
 
 
 def _sim(args):
-    kind, n_obj, seed = args
+    kind, n_obj, seed = args[:3]
+    theta = args[3] if len(args) > 3 else THETA_INJECT
     df = load_etnos("bb16")
     S = selection_cube("bb16")
     rng = np.random.default_rng(seed)
@@ -212,7 +214,7 @@ def _sim(args):
     S_sub = S[idx]
     g = None
     if kind == "planet":
-        g = planet_density_grid(Likelihood.from_frame(sub, S_sub), THETA_INJECT)
+        g = planet_density_grid(Likelihood.from_frame(sub, S_sub), theta)
     sub = sub.copy()
     sub["varpi"], sub["Omega"] = draw_orientations(S_sub, rng, g)
     res = run_evidence(Likelihood.from_frame(sub, S_sub), nlive=NLIVE_SIM, seed=seed)
@@ -228,6 +230,17 @@ def stage_calib(n_null=200, n_planet=100, sizes=(31, 62, 124)):
     with Pool() as pool:
         out = pool.map(_sim, jobs, chunksize=2)
     _save("calibration", {"theta_inject": dict(zip(PARAMS, THETA_INJECT)), "runs": out})
+
+
+def stage_power(n=40, sizes=(31, 62, 124, 248)):
+    """Injections at the bb16 posterior median (the planet the data would imply, if real):
+    how many ETNOs it would take to tell it from no planet."""
+    theta = np.median(np.load(OUT / "posterior_bb16_nondet.npy"), axis=0).tolist()
+    jobs = [("planet", m, 50_000 + 1000 * m + s, theta) for m in sizes for s in range(n)]
+    jobs += [("null", 248, 60_000 + s) for s in range(n // 2)]
+    with Pool() as pool:
+        out = pool.map(_sim, jobs, chunksize=1)
+    _save("power", {"theta_inject": dict(zip(PARAMS, theta)), "runs": out})
 
 
 def _sim_cross(args):
@@ -298,7 +311,8 @@ def stage_external():
 
 STAGES = {"main": stage_main, "priors": stage_priors, "selection": stage_selection,
           "split": stage_split, "loo": stage_loo, "nondet": stage_nondet, "calib": stage_calib,
-          "calib2": stage_calib2, "external": stage_external}
+          "calib2": stage_calib2, "external": stage_external,
+          "power": stage_power}
 
 
 def main():
