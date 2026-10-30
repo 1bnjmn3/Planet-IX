@@ -101,8 +101,39 @@ are 17-36 Me for a_p = 400-1000 AU; at i_p = 20° only a_p = 400 AU (35 Me) is b
 
 ## 4. Real-mass N-body forcing for ETNO-like orbits
 
-PENDING: `scripts/nbody_forced_poles.py` (5 Me / 500 AU and 10 Me / 700 AU, e_p = 0.25, i_p = 20°,
-q = 45 AU, 1 Gyr, no boost).
+`scripts/nbody_forced_poles.py`: real masses (no boost), planet e_p = 0.25 and i_p = 20°, six particles
+per row with q = 45 AU (so e = 0.78-0.94, as for real ETNOs), started 5° off the secular forced pole at
+six node phases, 1 Gyr, pole averaged over the last 0.8 Gyr (`data/processed/nbody_forced_poles.csv`).
+"Offset" is the median angle between a particle's mean pole and the secular forced pole; "spread" is the
+range of the six particles' mean inclinations.
+
+| planet | a (AU) | secular forced i | N-body median i | spread | offset |
+|---|---|---|---|---|---|
+| 5 Me, 500 AU | 200 | 3.7° | 5.5° | 5.1-6.3° | 2.0° |
+| | 250 | 8.3° | 5.5° | 2.6-15.7° | 5.4° |
+| | 300 | 13.4° | 10.9° | 8.4-18.1° | 4.5° |
+| | 400 | 19.0° | 17.6° | 0.8-26.8° | 12.8° |
+| | 550 | 20.0° | 27.5° | 6.7-51.5° | 25.7° |
+| | 750 | 19.8° | 21.4° | 4.7-27.9° | 14.8° |
+| 10 Me, 700 AU | 200 | 2.5° | 2.9° | 2.4-3.5° | 0.6° |
+| | 250 | 5.5° | 6.4° | 4.0-7.2° | 1.3° |
+| | 300 | 9.5° | 10.6° | 6.3-14.0° | 3.2° |
+| | 400 | 16.1° | 17.4° | 8.5-50.9° | 12.9° |
+| | 550 | 19.5° | 19.2° | 12.8-82.9° | 7.6° |
+| | 750 | 20.0° | 26.5° | 4.7-54.5° | 17.5° |
+
+All but one of the 72 particles kept a within 30% of its start. Two regimes:
+
+- Where the orbit stays inside the planet's (Q below about 0.8 a_p), the secular forced pole is right
+  to 1-5° even at e ≈ 0.8, and the particles of one row agree with each other.
+- Once Q reaches the planet's orbit, particles with the same (a, e) end up with mean poles 20-70° apart.
+  There is no single forced plane to compare with, so neither a secular model nor any "warp" fit of a
+  mean plane can be inverted for the planet's mass there. This covers most of bb16 for a_p ≤ 700 AU.
+
+For the probability workstream: the a at which the forced tilt reaches half of i_p (eccentricity-corrected
+secular model, e = 0.7) is 246 AU for 5 Me / 500 AU, 274 AU for 10 Me / 700 AU, 196 AU for
+6.2 Me / 380 AU, and 312 AU for 1 Me / 500 AU, which matches the scaling
+a_crit ∝ (a_p^3 (1-e_p^2)^1.5 / m)^(1/5) to 5-10%.
 
 ## 5. What is not modelled
 
