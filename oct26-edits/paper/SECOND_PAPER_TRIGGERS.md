@@ -47,3 +47,4 @@ The tracker appends one line per run, newest last:
 
 <!-- tracker log starts -->
 2026-10-30 | 31 | none | none | baseline written | first-paper snapshot
+2026-11-02 | 31 (no new ETNO verified) | none | T1, T3, T6 | WebSearch summaries (Rubin news, dp2.lsst.io, community.lsst.org, arXiv via search); arxiv.org and minorplanetcenter.net blocked | Rubin reports two TNOs reaching ~1,000 au (orbits unverified); DP2 SSObject tables exist but public release unconfirmed
