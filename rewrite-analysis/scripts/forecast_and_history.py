@@ -374,8 +374,69 @@ def stage_yield(n_mc=1_500_000, seed=11):
     _save("lsst_yield", out)
 
 
+# ---------------------------------------------------------------- N-body H1
+def _kappa_from_R(R):
+    """von Mises concentration with mean resultant length R (Banerjee et al. 2005 approximation)."""
+    R = np.clip(R, 1e-6, 0.95)
+    return R * (2 - R**2) / (1 - R**2)
+
+
+def _fisher_kappa(mean_cos):
+    """Fisher concentration with <cos theta> = coth k - 1/k, solved numerically."""
+    from scipy.optimize import brentq
+    m = float(np.clip(mean_cos, 1e-4, 0.995))
+    return brentq(lambda k: 1 / np.tanh(k) - 1 / k - m, 1e-4, 1e4)
+
+
+def stage_nbody_k(n_grid=72):
+    """Bayes factor of each simulated planet, with the orientation density taken from the
+    N-body runs (per-a-bin von Mises in varpi - varpi_9 about the simulated cluster centre,
+    Fisher pole scatter) and the planet's (varpi_9, Omega_9) marginalised on a uniform grid."""
+    from planetix.inference.model import _log_vm_rel
+
+    df = load_etnos("bb16")
+    S = selection_cube("bb16")
+    nv, no = S.shape[1:]
+    gv = np.radians((np.arange(nv) + 0.5) * 360.0 / nv)
+    go = np.radians((np.arange(no) + 0.5) * 360.0 / no)
+    out = {}
+    for fname in ("nbody_population_neptune", "nbody_population"):
+        path = OUT / f"{fname}.json"
+        if not path.exists():
+            continue
+        for name, r in json.loads(path.read_text()).items():
+            prof = r["profile"]
+            edges = np.array([p["a_lo"] for p in prof] + [prof[-1]["a_hi"]])
+            k = np.clip(np.searchsorted(edges, df["a"].to_numpy()) - 1, 0, len(prof) - 1)
+            R = np.array([prof[j]["R_varpi"] for j in k])
+            mu = np.radians([prof[j]["mean_dvarpi"] for j in k])
+            kv = _kappa_from_R(R)
+            kp = np.array([_fisher_kappa(prof[j]["mean_cos_pole"]) for j in k])
+            i9 = r["planet"]["i9"]
+            ko = kp * np.sin(np.radians(df["i"].to_numpy())) * np.sin(np.radians(i9))
+            v9 = np.radians((np.arange(n_grid) + 0.5) * 360.0 / n_grid)
+            o9 = v9.copy()
+            x_v, x_o = np.radians(df["varpi"].to_numpy()), np.radians(df["Omega"].to_numpy())
+            # log g at the data, (n_grid varpi9, n_obj) and (n_grid Omega9, n_obj)
+            lv = _log_vm_rel(x_v[None, :] - v9[:, None] - mu[None, :], kv[None, :])
+            lo = _log_vm_rel(x_o[None, :] - o9[:, None], ko[None, :])
+            # normalisation sum_x g S for every (varpi9, Omega9): separable in the two angles
+            hv = np.exp(_log_vm_rel(gv[None, None, :] - v9[:, None, None] - mu[None, :, None], kv[None, :, None]))
+            ho = np.exp(_log_vm_rel(go[None, None, :] - o9[:, None, None], ko[None, :, None]))
+            Z = np.einsum("ajv,jvo,bjo->abj", hv, S, ho)            # (varpi9, Omega9, obj)
+            logr = lv[:, None, :] + lo[None, :, :] - np.log(Z)
+            tot = logr.sum(axis=2)
+            ln_k = float(np.log(np.mean(np.exp(tot - tot.max()))) + tot.max())
+            best = np.unravel_index(np.argmax(tot), tot.shape)
+            out[f"{fname}:{name}"] = {"ln_bf": ln_k, "varpi9_best": float(np.degrees(v9[best[0]])),
+                                      "Omega9_best": float(np.degrees(o9[best[1]]))}
+            print(f"  {fname} {name}: lnK = {ln_k:.2f}  (best varpi9 {np.degrees(v9[best[0]]):.0f}, "
+                  f"Omega9 {np.degrees(o9[best[1]]):.0f})")
+    _save("nbody_bayes_factor", out)
+
+
 STAGES = {"history": stage_history, "predictive": stage_predictive, "selmarg": stage_selmarg,
-          "lsst": stage_lsst, "lsstsim": stage_lsstsim, "yield": stage_yield}
+          "lsst": stage_lsst, "lsstsim": stage_lsstsim, "yield": stage_yield, "nbody_k": stage_nbody_k}
 
 
 def main():

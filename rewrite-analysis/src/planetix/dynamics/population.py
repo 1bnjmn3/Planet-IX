@@ -53,6 +53,7 @@ class PopulationRun:
     times: np.ndarray           # yr, (T,)
     elements: np.ndarray        # (T, N, 6): a, e, i, Omega, omega, M (deg), NaN once removed
     initial: np.ndarray         # (N, 6) initial elements
+    planet_elements: np.ndarray | None = None  # (T, 6) the planet's own orbit, which precesses
 
     def snapshot(self, t_min: float):
         """Stacked elements of all live particles at times >= t_min, shape (K, 6)."""
@@ -105,34 +106,49 @@ def initial_conditions(n, rng, a_range=(150.0, 1500.0), q_range=(30.0, 50.0), i_
 
 
 def run_population(planet: PlanetSpec | None, n_particles=1000, t_end=1.0e9, n_out=1000, dt=50.0,
-                   t_secular=1.0e4, q_sink=30.0, a_max=1.0e4, seed=0, progress=None) -> PopulationRun:
+                   t_secular=1.0e4, q_sink=30.0, a_max=1.0e4, seed=0, progress=None,
+                   neptune=False, checkpoint=None, checkpoint_every=25) -> PopulationRun:
+    """With ``neptune=True`` Neptune is integrated explicitly (MERCURIUS, close encounters
+    with Neptune and the planet resolved by IAS15), only Jupiter, Saturn and Uranus enter
+    as J2, ``q_sink`` should be lowered (e.g. 5 au) so that Neptune does the removing, and
+    ``dt`` must resolve Neptune's orbit (10 yr). In both modes the J2 rotations act on the
+    planet too, so its apsidal and nodal precession matches the particles'."""
     import rebound
 
     rng = np.random.default_rng(seed)
     init = initial_conditions(n_particles, rng)
-    m_sun = 1.0 + sum(m for m, _ in GIANTS.values())
+    j2_bodies = {k: v for k, v in GIANTS.items() if not (neptune and k == "Neptune")}
+    m_sun = 1.0 + sum(m for m, _ in j2_bodies.values())
     mu = GM_SUN * m_sun
-    j2r2 = giants_j2r2()
+    j2r2 = 0.5 * sum(m * a**2 for m, a in j2_bodies.values()) if neptune else giants_j2r2()
 
     sim = rebound.Simulation()
     sim.units = ("yr", "AU", "Msun")
     sim.add(m=m_sun)
-    n_massive = 1
+    if neptune:
+        m_nep, a_nep = GIANTS["Neptune"]
+        sim.add(m=m_nep, a=a_nep, e=0.009, inc=0.0, Omega=0.0, omega=0.0, M=rng.uniform(0, 2 * np.pi),
+                r=0.00016)
     if planet is not None:
         sim.add(m=planet.m9 * M_EARTH, a=planet.a9, e=planet.e9, inc=np.radians(planet.i9),
                 Omega=np.radians(planet.Omega9), omega=np.radians((planet.varpi9 - planet.Omega9) % 360.0), M=0.0)
-        n_massive = 2
+    n_massive = sim.N
+    i_planet = n_massive - 1 if planet is not None else None
     for k, (a, e, inc, Om, om, M) in enumerate(init):
         sim.add(primary=sim.particles[0], a=a, e=e, inc=np.radians(inc), Omega=np.radians(Om),
                 omega=np.radians(om), M=np.radians(M))
     sim.N_active = n_massive
     sim.testparticle_type = 0
-    sim.integrator = "whfast"
+    sim.integrator = "mercurius" if neptune else "whfast"
+    if neptune:
+        sim.integrator.r_crit_hill = 3.0
+        sim.collision = "none"
     sim.dt = dt
     sim.move_to_com()
 
     times = np.linspace(0.0, t_end, n_out + 1)[1:]
     out = np.full((n_out, n_particles, 6), np.nan)
+    planet_el = np.full((n_out, 6), np.nan)
     t = 0.0
     alive = np.arange(n_particles)  # particle k is sim.particles[n_massive + position]
     for t_idx, t_out in enumerate(times):
@@ -145,8 +161,8 @@ def run_population(planet: PlanetSpec | None, n_particles=1000, t_end=1.0e9, n_o
             buf = np.zeros((sim.N, 6))
             sim.serialize_particle_data(xyzvxvyvz=buf)
             sun = buf[0].copy()
-            r = buf[n_massive:, :3] - sun[:3]
-            v = buf[n_massive:, 3:] - sun[3:]
+            r = buf[1:, :3] - sun[:3]
+            v = buf[1:, 3:] - sun[3:]
             el, hhat = _elements(r, v, mu)
             a, e, inc = el[:, 0], el[:, 1], np.radians(el[:, 2])
             p = np.abs(a) * np.abs(1 - e**2)
@@ -157,8 +173,8 @@ def run_population(planet: PlanetSpec | None, n_particles=1000, t_end=1.0e9, n_o
             r, v = _rotate(r, hhat, dom), _rotate(v, hhat, dom)
             z = np.tile([0.0, 0.0, 1.0], (len(r), 1))
             r, v = _rotate(r, z, dOm), _rotate(v, z, dOm)
-            buf[n_massive:, :3] = r + sun[:3]
-            buf[n_massive:, 3:] = v + sun[3:]
+            buf[1:, :3] = r + sun[:3]
+            buf[1:, 3:] = v + sun[3:]
             sim.set_serialized_particle_data(xyzvxvyvz=buf)
         # record and remove
         buf = np.zeros((sim.N, 6))
@@ -166,6 +182,8 @@ def run_population(planet: PlanetSpec | None, n_particles=1000, t_end=1.0e9, n_o
         r = buf[n_massive:, :3] - buf[0, :3]
         v = buf[n_massive:, 3:] - buf[0, 3:]
         el, _ = _elements(r, v, mu)
+        if i_planet is not None:
+            planet_el[t_idx] = _elements(buf[[i_planet], :3] - buf[0, :3], buf[[i_planet], 3:] - buf[0, 3:], mu)[0][0]
         q = el[:, 0] * (1 - el[:, 1])
         dead = (el[:, 1] >= 1) | (el[:, 0] <= 0) | (el[:, 0] > a_max) | (q < q_sink)
         out[t_idx, alive[~dead]] = el[~dead]
@@ -174,20 +192,32 @@ def run_population(planet: PlanetSpec | None, n_particles=1000, t_end=1.0e9, n_o
         alive = alive[~dead]
         if progress is not None:
             progress(t_out, len(alive))
+        if checkpoint is not None and (t_idx + 1) % checkpoint_every == 0:
+            np.savez_compressed(checkpoint, times=times[:t_idx + 1], elements=out[:t_idx + 1].astype(np.float32),
+                                initial=init, planet_elements=planet_el[:t_idx + 1])
         if not len(alive):
             break
-    return PopulationRun(planet, times, out, init)
+    return PopulationRun(planet, times, out, init, planet_el)
 
 
 def confinement_profile(run: PopulationRun, t_min: float, a_edges, q_min=30.0):
     """Mean-resultant statistics of varpi - varpi_9 and of the pole offset from the
     planet's pole, per semi-major-axis bin, over all snapshots after t_min."""
-    el = run.snapshot(t_min)
-    el = el[el[:, 0] * (1 - el[:, 1]) > q_min]
+    sel = run.times >= t_min
+    el = run.elements[sel]
     p = run.planet
-    dvarpi = np.radians((el[:, 3] + el[:, 4] - p.varpi9) % 360.0)
+    if run.planet_elements is not None and np.isfinite(run.planet_elements[sel, 0]).all():
+        pe = run.planet_elements[sel]
+        varpi9 = np.broadcast_to(((pe[:, 3] + pe[:, 4]) % 360.0)[:, None], el.shape[:2])
+        pole9_t = np.broadcast_to(_pole(pe[:, 2], pe[:, 3])[:, None, :], el.shape[:2] + (3,))
+    else:
+        varpi9 = np.full(el.shape[:2], p.varpi9)
+        pole9_t = np.broadcast_to(_pole(np.array([p.i9]), np.array([p.Omega9]))[0], el.shape[:2] + (3,))
+    el, varpi9, pole9_t = el.reshape(-1, 6), varpi9.reshape(-1), pole9_t.reshape(-1, 3)
+    ok = np.isfinite(el[:, 0]) & (el[:, 0] * (1 - el[:, 1]) > q_min)
+    el, varpi9, pole9_t = el[ok], varpi9[ok], pole9_t[ok]
+    dvarpi = np.radians((el[:, 3] + el[:, 4] - varpi9) % 360.0)
     pole = _pole(el[:, 2], el[:, 3])
-    pole9 = _pole(np.array([p.i9]), np.array([p.Omega9]))[0]
     rows = []
     for lo, hi in zip(a_edges[:-1], a_edges[1:]):
         m = (el[:, 0] >= lo) & (el[:, 0] < hi)
@@ -195,7 +225,7 @@ def confinement_profile(run: PopulationRun, t_min: float, a_edges, q_min=30.0):
             continue
         R = np.hypot(np.cos(dvarpi[m]).mean(), np.sin(dvarpi[m]).mean())
         mean_dir = np.degrees(np.arctan2(np.sin(dvarpi[m]).mean(), np.cos(dvarpi[m]).mean())) % 360.0
-        cosang = pole[m] @ pole9
+        cosang = np.sum(pole[m] * pole9_t[m], axis=1)
         rows.append({"a_lo": lo, "a_hi": hi, "n": int(m.sum()), "R_varpi": R, "mean_dvarpi": mean_dir,
                      "mean_pole_offset_deg": float(np.degrees(np.arccos(np.clip(cosang, -1, 1))).mean()),
                      "mean_cos_pole": float(cosang.mean())})

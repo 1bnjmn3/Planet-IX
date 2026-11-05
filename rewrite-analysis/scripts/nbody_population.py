@@ -35,14 +35,17 @@ A_EDGES = [150, 200, 250, 300, 400, 550, 750, 1000, 1500]
 
 
 def _run(args):
-    name, n, t_end, seed = args
-    run = run_population(PLANETS[name], n_particles=n, t_end=t_end, n_out=500, seed=seed)
-    np.savez_compressed(CACHE / f"nbody_{name}.npz", times=run.times, elements=run.elements.astype(np.float32),
-                        initial=run.initial)
+    name, n, t_end, seed, neptune = args
+    tag = "_neptune" if neptune else ""
+    kw = dict(neptune=True, dt=10.0, q_sink=20.0) if neptune else {}
+    run = run_population(PLANETS[name], n_particles=n, t_end=t_end, n_out=500, seed=seed,
+                         checkpoint=CACHE / f"nbody_{name}{tag}_partial.npz", **kw)
+    np.savez_compressed(CACHE / f"nbody_{name}{tag}.npz", times=run.times, elements=run.elements.astype(np.float32),
+                        initial=run.initial, planet_elements=run.planet_elements)
     prof = confinement_profile(run, t_min=0.5 * t_end, a_edges=A_EDGES)
     alive = int(np.isfinite(run.elements[-1, :, 0]).sum())
     return name, {"planet": vars(PLANETS[name]), "n_particles": n, "t_end": t_end, "n_alive_end": alive,
-                  "profile": prof}
+                  "neptune_explicit": neptune, "profile": prof}
 
 
 def main():
@@ -50,12 +53,15 @@ def main():
     ap.add_argument("--n", type=int, default=1000)
     ap.add_argument("--t-end", type=float, default=1.0e9)
     ap.add_argument("--planets", nargs="*", default=list(PLANETS))
+    ap.add_argument("--neptune", action="store_true",
+                    help="integrate Neptune explicitly (MERCURIUS, dt = 10 yr) instead of a q < 30 au sink")
     args = ap.parse_args()
     CACHE.mkdir(parents=True, exist_ok=True)
     OUT.mkdir(parents=True, exist_ok=True)
     with Pool(len(args.planets)) as pool:
-        res = dict(pool.map(_run, [(p, args.n, args.t_end, k) for k, p in enumerate(args.planets)]))
-    (OUT / "nbody_population.json").write_text(json.dumps(res, indent=1, default=float))
+        res = dict(pool.map(_run, [(p, args.n, args.t_end, k, args.neptune) for k, p in enumerate(args.planets)]))
+    name = "nbody_population_neptune" if args.neptune else "nbody_population"
+    (OUT / f"{name}.json").write_text(json.dumps(res, indent=1, default=float))
     for name, r in res.items():
         print(name, r["n_alive_end"])
         for row in r["profile"]:
