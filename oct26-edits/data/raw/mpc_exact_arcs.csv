@@ -1,0 +1,7 @@
+# Exact observed arcs from the MPC observation API (data.minorplanetcenter.net/api/get-obs),
+# for orbits whose MPCORB arc field is a year span that straddles the one-year cut.
+# Checked 2026-11-05. last_obs must match the MPCORB last-observation date for the row to apply.
+designation,first_obs,last_obs,catalogue
+2013 FS28,2013-03-16,2014-05-02,mpc_distant_2026-01
+2015 OB203,2015-07-12,2016-07-12,mpc_distant_2026-01 and 2026-11-05
+2025 LS2,2025-06-05,2026-05-21,Distant.txt 2026-11-05

@@ -35,3 +35,12 @@ def test_numbered_object_split_into_number_and_name():
     df = read_mpcorb(SAMPLE).set_index("designation")
     assert df.loc["90377", "name"] == "Sedna"
     assert df.loc["90377", "n_opp"] == 26
+
+
+def test_arc_days_min_uses_last_observation_for_year_spans():
+    from planetix.data.mpc import _arc_days_min
+
+    assert _arc_days_min("  36 days", "20260101") == 36.0
+    # '2025-2026' last seen 2026-05-21: first obs could be 2025-12-31 -> at least 141 d
+    assert _arc_days_min("2025-2026", "20260521") == 141.0
+    assert _arc_days_min("2015-2026", "20260513") == pytest.approx(3786.0)

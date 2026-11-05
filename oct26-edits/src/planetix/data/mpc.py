@@ -81,7 +81,11 @@ def _jd_from_calendar(year: int, month: int, day: float) -> float:
 
 
 def _arc_days(arc: str) -> float:
-    """Observed arc in days from '1990-2026' (years) or '  36 days'."""
+    """Observed arc in days from '1990-2026' (years) or '  36 days'.
+
+    A year span is only approximate: '2025-2026' can mean anything from a few
+    days to almost two years. Use ``_arc_days_min`` for quality cuts.
+    """
     arc = arc.strip()
     m = re.fullmatch(r"(\d+)\s*days", arc)
     if m:
@@ -92,11 +96,30 @@ def _arc_days(arc: str) -> float:
     return np.nan
 
 
+def _arc_days_min(arc: str, last_obs: str) -> float:
+    """Shortest arc consistent with the arc field and the last-observation date.
+
+    For '  36 days' this is the arc itself. For a year span 'Y1-Y2' the first
+    observation can be as late as 31 December Y1, so the arc is at least
+    ``last_obs - (Y1-12-31)`` days.
+    """
+    arc = arc.strip()
+    m = re.fullmatch(r"(\d+)\s*days", arc)
+    if m:
+        return float(m.group(1))
+    m = re.fullmatch(r"(\d{4})-(\d{4})", arc)
+    if m and re.fullmatch(r"\d{8}", last_obs.strip()):
+        lo = last_obs.strip()
+        last = _jd_from_calendar(int(lo[:4]), int(lo[4:6]), int(lo[6:]))
+        return float(max(last - _jd_from_calendar(int(m.group(1)), 12, 31), 0.0))
+    return np.nan
+
+
 def read_mpcorb(path: str | Path) -> pd.DataFrame:
     """Read an MPCORB-format file into a DataFrame.
 
     Returns one row per orbit with angles in degrees and distances in AU,
-    plus derived columns q, Q, varpi, epoch_jd and arc_days. Header lines and
+    plus derived columns q, Q, varpi, epoch_jd, arc_days and arc_days_min. Header lines and
     lines too short to hold the orbital elements are skipped.
     """
     rows = []
@@ -119,6 +142,7 @@ def read_mpcorb(path: str | Path) -> pd.DataFrame:
 
     df["epoch_jd"] = df["epoch_packed"].map(unpack_epoch)
     df["arc_days"] = df["arc"].map(_arc_days)
+    df["arc_days_min"] = [_arc_days_min(a, l) for a, l in zip(df["arc"], df["last_obs"])]
     number = df["name"].str.extract(r"^\((\d+)\)", expand=False)
     df["name"] = df["name"].str.replace(r"^\(\d+\)\s*", "", regex=True)
     # Numbered objects are identified by number, others by provisional designation.

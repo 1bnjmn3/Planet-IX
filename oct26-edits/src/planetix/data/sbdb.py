@@ -103,4 +103,5 @@ def parse_response(payload: dict) -> pd.DataFrame:
     df["U"] = df["U"].astype("string").str.strip()
     df["name"] = df["name"].fillna(df["full_name"].str.strip())
     df["varpi"] = varpi_deg(df["Omega"], df["omega"])
+    df["arc_days_min"] = df["arc_days"]  # SBDB reports the exact arc
     return df[COLUMNS].reset_index(drop=True)
