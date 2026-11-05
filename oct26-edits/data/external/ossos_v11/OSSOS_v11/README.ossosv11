@@ -1,0 +1,36 @@
+
+README.ossosv11
+
+This subdir contains the OSSOSv11 survey characterization (OSSOS only; the MA
+blocks are in MA).
+
+--------------------------------------------------------------------------------
+
+This directory contains the pointing history, efficiency functions for each
+block, and the list of detected objects
+
+The content of this directory is:
+
+OSSOS_v11
+  \---- README.ossosv11 (this file)     Describes content of the directory
+   \-------- README.formats            Describes format of a survey "block"
+    \------- pointings.list            List of pointings and times of the
+     \                                 survey, often grouped into chunks.
+       \---- 201ySn.eff                Efficiency functions for OSSOS blocks,
+       |                               where y gives the year (201y), S (a
+       |                               single letter) semester, and n the
+       |                               block name (eg, E, O, L, H, P, M, S, T,
+       |                               D, C)
+        \--- OSSOS_v11.detections      List of objects really detected in
+        |                              OSSOS, with their dynamical 
+        |                              class if  known, magnitude at
+        |                              detection, rate of motion, H mag,
+        |                              and more.
+         \-- OSSOS_v11.CDS             Same as OSSOS_v11.detections, in CDS
+                                       format.
+
+Six of the OSSOS objects are CFEPS re-detections (see the top-level Duplicates
+file); they also appear in CFEPS_g under their CFEPS designations, with their
+CFEPS detection circumstances.
+	    
+--------------------------------------------------------------------------------

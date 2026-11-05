@@ -1,0 +1,251 @@
+{
+  "discovery_dates": {
+    "designation": 6463,
+    "arc": 73
+  },
+  "n_pointings": 142,
+  "position_error_deg": {
+    "p50": 0.03436221651429404,
+    "p90": 0.07787211677346026,
+    "p99": 0.10787126252419546,
+    "p100": 0.11937730320537158
+  },
+  "simulator_recovery": {
+    "CFEPS_g": 0.8804347826086957,
+    "CFEPS_presurvey": 0.9166666666666666,
+    "CFEPS_r": 0.9285714285714286,
+    "HiLat": 0.9523809523809523,
+    "MA": 1.0,
+    "OSSOS_v11": 0.9585308056872038
+  },
+  "simulator_recovery_all": 0.9479166666666666,
+  "clustering_p": [
+    {
+      "cut": "bb16",
+      "null": "footprint (binary)",
+      "D_perihelion": 0.1558,
+      "D_varpi": 0.1571,
+      "R_Omega": 0.1607,
+      "R_perihelion": 0.1846,
+      "R_pole": 0.0576,
+      "R_varpi": 0.191,
+      "min_p": 0.2357
+    },
+    {
+      "cut": "bb16",
+      "null": "footprint (no Plutinos)",
+      "D_perihelion": 0.0613,
+      "D_varpi": 0.0665,
+      "R_Omega": 0.1768,
+      "R_perihelion": 0.2069,
+      "R_pole": 0.0576,
+      "R_varpi": 0.2148,
+      "min_p": 0.2388
+    },
+    {
+      "cut": "bb16",
+      "null": "footprint (r=10)",
+      "D_perihelion": 0.0661,
+      "D_varpi": 0.0712,
+      "R_Omega": 0.1721,
+      "R_perihelion": 0.2107,
+      "R_pole": 0.0571,
+      "R_varpi": 0.2175,
+      "min_p": 0.2353
+    },
+    {
+      "cut": "bb16",
+      "null": "footprint (r=3)",
+      "D_perihelion": 0.0691,
+      "D_varpi": 0.0743,
+      "R_Omega": 0.1845,
+      "R_perihelion": 0.2067,
+      "R_pole": 0.0601,
+      "R_varpi": 0.2152,
+      "min_p": 0.2483
+    },
+    {
+      "cut": "bb16",
+      "null": "footprint (r=5, count)",
+      "D_perihelion": 0.0701,
+      "D_varpi": 0.075,
+      "R_Omega": 0.1832,
+      "R_perihelion": 0.2087,
+      "R_pole": 0.0592,
+      "R_varpi": 0.2165,
+      "min_p": 0.2436
+    },
+    {
+      "cut": "bb16",
+      "null": "uniform",
+      "D_perihelion": 0.183,
+      "D_varpi": 0.1911,
+      "R_Omega": 0.1071,
+      "R_perihelion": 0.1765,
+      "R_pole": 0.0336,
+      "R_varpi": 0.1851,
+      "min_p": 0.1124
+    },
+    {
+      "cut": "detached",
+      "null": "footprint (r=5, count)",
+      "D_perihelion": 0.2422,
+      "D_varpi": 0.2359,
+      "R_Omega": 0.3679,
+      "R_perihelion": 0.3965,
+      "R_pole": 0.1837,
+      "R_varpi": 0.3812,
+      "min_p": 0.5656
+    },
+    {
+      "cut": "detached",
+      "null": "uniform",
+      "D_perihelion": 0.3725,
+      "D_varpi": 0.3591,
+      "R_Omega": 0.289,
+      "R_perihelion": 0.3809,
+      "R_pole": 0.1371,
+      "R_varpi": 0.3672,
+      "min_p": 0.3788
+    },
+    {
+      "cut": "ts14",
+      "null": "footprint (r=5, count)",
+      "D_perihelion": 0.0014,
+      "D_varpi": 0.0021,
+      "R_Omega": 0.013,
+      "R_perihelion": 0.015,
+      "R_pole": 0.0093,
+      "R_varpi": 0.02,
+      "min_p": 0.0074
+    },
+    {
+      "cut": "ts14",
+      "null": "uniform",
+      "D_perihelion": 0.0065,
+      "D_varpi": 0.011,
+      "R_Omega": 0.0014,
+      "R_perihelion": 0.0071,
+      "R_pole": 0.001,
+      "R_varpi": 0.0116,
+      "min_p": 0.0036
+    }
+  ],
+  "characterised_subset": {
+    "N": 9,
+    "p": {
+      "OSSOS-characterised": {
+        "D_perihelion": 0.6373,
+        "D_varpi": 0.6406,
+        "R_Omega": 0.9001,
+        "R_perihelion": 0.7501,
+        "R_pole": 0.8066,
+        "R_varpi": 0.7086,
+        "min_p": 0.7545
+      },
+      "empirical footprint": {
+        "D_perihelion": 0.8424,
+        "D_varpi": 0.8017,
+        "R_Omega": 0.9108,
+        "R_perihelion": 0.6889,
+        "R_pole": 0.8322,
+        "R_varpi": 0.6628,
+        "min_p": 0.6293
+      },
+      "uniform": {
+        "D_perihelion": 0.6869,
+        "D_varpi": 0.6611,
+        "R_Omega": 0.9031,
+        "R_perihelion": 0.6799,
+        "R_pole": 0.826,
+        "R_varpi": 0.6506,
+        "min_p": 0.5657
+      }
+    },
+    "median_TV": {
+      "TV_ossos_vs_footprint": 0.196,
+      "TV_ossos_vs_uniform": 0.192,
+      "TV_footprint_vs_uniform": 0.125
+    }
+  },
+  "inclination_bb16": {
+    "with_selection": {
+      "sigma_hat": 19.25,
+      "sigma_lo": 15.5,
+      "sigma_hi": 25.0,
+      "ks_p": 0.28586795631922857
+    },
+    "no_selection": {
+      "sigma_hat": 14.5,
+      "sigma_lo": 12.5,
+      "sigma_hi": 17.5,
+      "ks_p": 0.8883750941401068
+    },
+    "old_script_32": {
+      "AD_p_rayleigh_6": 0.001,
+      "AD_p_rayleigh_10": 0.001612266905885278,
+      "AD_p_rayleigh_15": 0.25,
+      "AD_p_rayleigh_20": 0.001
+    }
+  },
+  "autoencoder_objects_p_below_0.05": 2,
+  "ml": [
+    {
+      "cut": "bb16",
+      "null": "uniform",
+      "autoencoder_p": 0.07492507492507493,
+      "autoencoder_score": 0.4063772312957226,
+      "autoencoder_null_mean": 0.3471343707785312,
+      "c2st_auc": 0.44963579604578563,
+      "c2st_null_mean": 0.4366632847728061,
+      "c2st_p": 0.4750830564784053
+    },
+    {
+      "cut": "bb16",
+      "null": "footprint",
+      "autoencoder_p": 0.25574425574425574,
+      "autoencoder_score": 0.3759869325254789,
+      "autoencoder_null_mean": 0.34533045873434265,
+      "c2st_auc": 0.5177939646201873,
+      "c2st_null_mean": 0.43175789108567453,
+      "c2st_p": 0.13953488372093023
+    },
+    {
+      "cut": "ts14",
+      "null": "uniform",
+      "autoencoder_p": 0.6763236763236763,
+      "autoencoder_score": 0.3266998598775602,
+      "autoencoder_null_mean": 0.3418438908794231,
+      "c2st_auc": 0.6085978147762747,
+      "c2st_null_mean": 0.45265853711411724,
+      "c2st_p": 0.0033222591362126247
+    },
+    {
+      "cut": "ts14",
+      "null": "footprint",
+      "autoencoder_p": 0.24675324675324675,
+      "autoencoder_score": 0.37088044108764046,
+      "autoencoder_null_mean": 0.3488256099463931,
+      "c2st_auc": 0.5951612903225807,
+      "c2st_null_mean": 0.45626573881373567,
+      "c2st_p": 0.009966777408637873
+    }
+  ],
+  "old_script_02_audit": {
+    "top3_jaccard_between_seeds_mean": 0.7266666666666667,
+    "distinct_objects_in_top3_over_seeds": 5,
+    "spearman_score_vs_a": 0.23104838709677425,
+    "spearman_score_vs_e": 0.2524193548387097,
+    "spearman_score_vs_i": 0.04798387096774194,
+    "spearman_score_vs_varpi_offset": 0.08951612903225807,
+    "spearman_score_vs_q": 0.192741935483871
+  },
+  "old_script_17_milky_way": {
+    "max_abs_error_deg": 20.86223203480938,
+    "true_max_lat": 60.18835644167522,
+    "true_lon_of_max": 0.2566019935895365,
+    "old_lon_of_max": 10.0
+  },
+  "bb16_discovered_within_10deg_of_galactic_plane": 0,
+  "reference_discoveries_within_10deg_of_galactic_plane_frac": 0.014212152420185377
+}
