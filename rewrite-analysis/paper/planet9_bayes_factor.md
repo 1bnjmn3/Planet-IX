@@ -2,7 +2,7 @@
 
 *A bias-aware Bayesian model comparison with the 2026 ETNO sample*
 
-Planet IX project rebuild, October 2026. Code: `oct26-edits/` (package `planetix`), every number below is
+Planet IX project rebuild, October 2026. Code: `rewrite-analysis/` (package `planetix`), every number below is
 reproduced by `python scripts/infer_planet9.py && python scripts/make_paper_figures.py`.
 
 ---
@@ -370,7 +370,7 @@ proposed.
 ## Reproducing
 
 ```bash
-cd oct26-edits
+cd rewrite-analysis
 pip install -e ".[plot,inference,dev]"
 python scripts/infer_planet9.py          # ~1 h on 4 cores; writes paper/results/
 python scripts/make_paper_figures.py     # writes paper/figures/

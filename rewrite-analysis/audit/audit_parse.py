@@ -1,4 +1,4 @@
-"""Audit check for ORIGINAL_PROJECT_AUDIT.md. Run from anywhere: python oct26-edits/audit/audit_parse.py"""
+"""Audit check for ORIGINAL_PROJECT_AUDIT.md. Run from anywhere: python rewrite-analysis/audit/audit_parse.py"""
 from pathlib import Path
 _ROOT = Path(__file__).resolve().parents[2]
 ORIG = str(_ROOT / "Benjamins code") + "/"

@@ -286,10 +286,10 @@ inclination of the whole N = 20 sample is 17.8°, so even a one-component fit pa
 From the repository root, with `numpy scipy pandas scikit-learn` installed:
 
 ```bash
-python oct26-edits/audit/audit_parse.py   # §5 parser loss, ϖ clustering by sample
-python oct26-edits/audit/audit_warp.py    # §1 constants, error bars, circularity null
-python oct26-edits/audit/audit_stats.py   # §2-3 KDE peak, mean plane, bootstrap, GMM, DBSCAN, PCA (a few minutes)
-python oct26-edits/audit/audit_misc.py    # §2.3 Galactic plane, §4 timescales/units, §3.5 classifier null
+python rewrite-analysis/audit/audit_parse.py   # §5 parser loss, ϖ clustering by sample
+python rewrite-analysis/audit/audit_warp.py    # §1 constants, error bars, circularity null
+python rewrite-analysis/audit/audit_stats.py   # §2-3 KDE peak, mean plane, bootstrap, GMM, DBSCAN, PCA (a few minutes)
+python rewrite-analysis/audit/audit_misc.py    # §2.3 Galactic plane, §4 timescales/units, §3.5 classifier null
 ```
 
 The figures quoted from the original scripts (BIC values, 1.65 M⊕, 15.7°, silhouette 0.553, AD = 29.2,
