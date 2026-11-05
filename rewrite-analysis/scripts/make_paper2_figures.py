@@ -99,31 +99,39 @@ def fig_selmarg():
 def fig_nbody():
     if not _have("nbody_population"):
         return
-    nb = load("nbody_population")
-    fig, axes = plt.subplots(1, 2, figsize=(7.2, 2.7))
-    for (name, r), c in zip(nb.items(), (BLUE, ORANGE, AQUA)):
-        prof = r["profile"]
-        a = [np.sqrt(p["a_lo"] * p["a_hi"]) for p in prof]
-        pl = r["planet"]
-        axes[0].plot(a, [p["R_varpi"] for p in prof], "o-", color=c, ms=3.5,
-                     label=f"{name}: {pl['m9']:g} $M_\\oplus$, {pl['a9']:g} au, e={pl['e9']:g}")
-        far = [(ai, p) for ai, p in zip(a, prof) if p["R_varpi"] > 0.2]
-        axes[1].plot([x for x, _ in far], [(p["mean_dvarpi"] + 180) % 360 - 180 for _, p in far], "o-", color=c, ms=3.5)
+    runs = [("nbody_population", "-", "giants as J2, Neptune as q < 30 au sink, 1 Gyr")]
+    if (OUT / "nbody_population_neptune.json").exists():
+        runs.append(("nbody_population_neptune", "--", "Neptune explicit, 2 Gyr"))
+    fig, axes = plt.subplots(1, 2, figsize=(7.2, 2.9))
+    for fname, ls, _ in runs:
+        nb = load(fname)
+        for (name, r), c in zip(nb.items(), (BLUE, ORANGE, AQUA)):
+            prof = r["profile"]
+            a = [np.sqrt(p["a_lo"] * p["a_hi"]) for p in prof]
+            pl = r["planet"]
+            lab = f"{name}: {pl['m9']:g} $M_\\oplus$, {pl['a9']:g} au, e={pl['e9']:g}" if ls == "-" else None
+            axes[0].plot(a, [p["R_varpi"] for p in prof], "o" + ls, color=c, ms=3.5, label=lab)
+            far = [(ai, p) for ai, p in zip(a, prof) if p["R_varpi"] > 0.3]
+            axes[1].plot([x for x, _ in far], [p["mean_dvarpi"] % 360 - 180 for _, p in far], "o" + ls,
+                         color=c, ms=3.5)
     post = OUT / "posterior_bb16_nondet.npy"
     if post.exists():
         from scipy.special import i0e, i1e
         th = np.median(np.load(post), axis=0)
         k = 10 ** th[7]
-        axes[0].axhline(th[6] * i1e(k) / i0e(k), color=INK, ls="--", lw=1)
-        axes[0].text(160, th[6] * i1e(k) / i0e(k) + 0.02, "implied by the 31 ETNOs (a >> a_crit)", fontsize=6.5, color=INK)
+        axes[0].axhline(th[6] * i1e(k) / i0e(k), color=INK, ls=":", lw=1)
+        axes[0].text(160, th[6] * i1e(k) / i0e(k) + 0.02, "implied by the 31 ETNOs", fontsize=6.5, color=INK)
     for ax in axes:
         ax.set_xscale("log")
         ax.set_xlabel("semi-major axis [au]")
         ax.axvline(250, color=INK2, ls=":", lw=0.8)
     axes[0].set_ylabel(r"perihelion clustering $R(\varpi-\varpi_9)$")
     axes[1].axhline(0, color=INK, lw=0.8)
-    axes[1].set_ylabel(r"cluster centre $\Delta\varpi - 180^\circ$ [deg]")
+    axes[1].set_ylim(-180, 180)
+    axes[1].set_ylabel(r"cluster centre $\Delta\varpi - 180^\circ$ [deg] (R > 0.3)")
     axes[0].legend(fontsize=6.5, loc="upper left")
+    fig.text(0.5, -0.1, "solid: " + runs[0][2] + ("; dashed: " + runs[1][2] if len(runs) > 1 else ""),
+             ha="center", fontsize=7, color=INK2)
     fig.savefig(FIG / "fig9_nbody.png")
     plt.close(fig)
 

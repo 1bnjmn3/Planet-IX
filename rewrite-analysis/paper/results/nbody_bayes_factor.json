@@ -1,0 +1,32 @@
+{
+ "nbody_population_neptune:BB21": {
+  "ln_bf": -0.0661984520389689,
+  "varpi9_best": 272.5,
+  "Omega9_best": 97.5
+ },
+ "nbody_population_neptune:REF": {
+  "ln_bf": -2.397547395243269,
+  "varpi9_best": 267.5,
+  "Omega9_best": 107.5
+ },
+ "nbody_population_neptune:BB16": {
+  "ln_bf": 0.1971492995766937,
+  "varpi9_best": 2.5,
+  "Omega9_best": 117.5
+ },
+ "nbody_population:BB21": {
+  "ln_bf": -6.367119328732035,
+  "varpi9_best": 237.49999999999997,
+  "Omega9_best": 102.5
+ },
+ "nbody_population:REF": {
+  "ln_bf": -5.124524483957723,
+  "varpi9_best": 257.5,
+  "Omega9_best": 112.5
+ },
+ "nbody_population:BB16": {
+  "ln_bf": 0.3525396770664755,
+  "varpi9_best": 312.5,
+  "Omega9_best": 112.5
+ }
+}
